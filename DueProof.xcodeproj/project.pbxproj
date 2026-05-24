@@ -1,0 +1,677 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000001 /* DueProofApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* DueProofApp.swift */; };
+		100000000000000000000002 /* Claim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* Claim.swift */; };
+		100000000000000000000003 /* ClaimCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* ClaimCategory.swift */; };
+		100000000000000000000004 /* ClaimStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* ClaimStatus.swift */; };
+		100000000000000000000005 /* ProofItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* ProofItem.swift */; };
+		100000000000000000000006 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000006 /* DashboardView.swift */; };
+		100000000000000000000007 /* ClaimsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* ClaimsListView.swift */; };
+		100000000000000000000008 /* ClaimDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000008 /* ClaimDetailView.swift */; };
+		100000000000000000000009 /* ClaimEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* ClaimEditorView.swift */; };
+		10000000000000000000000A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* SettingsView.swift */; };
+		10000000000000000000000B /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* EmptyStateView.swift */; };
+		10000000000000000000000C /* ProofGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* ProofGalleryView.swift */; };
+		10000000000000000000000D /* MetricCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000D /* MetricCardView.swift */; };
+		10000000000000000000000E /* ClaimRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000E /* ClaimRowView.swift */; };
+		10000000000000000000000F /* QuickAddGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* QuickAddGridView.swift */; };
+		100000000000000000000010 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* NotificationService.swift */; };
+		100000000000000000000011 /* FileStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* FileStorageService.swift */; };
+		100000000000000000000012 /* CalendarExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* CalendarExportService.swift */; };
+		100000000000000000000013 /* ImportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* ImportExportService.swift */; };
+		100000000000000000000014 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* CurrencyFormatter.swift */; };
+		100000000000000000000015 /* DateHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000015 /* DateHelpers.swift */; };
+		100000000000000000000016 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* AppTheme.swift */; };
+		100000000000000000000017 /* PreviewSampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000017 /* PreviewSampleData.swift */; };
+		100000000000000000000018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000018 /* Assets.xcassets */; };
+		100000000000000000000019 /* DashboardMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001A /* DashboardMetrics.swift */; };
+		10000000000000000000001A /* ClaimCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001B /* ClaimCardView.swift */; };
+		10000000000000000000001B /* ClaimDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001C /* ClaimDraft.swift */; };
+		10000000000000000000001C /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001D /* OCRResult.swift */; };
+		10000000000000000000001D /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001E /* OCRService.swift */; };
+		10000000000000000000001E /* IntelligenceAvailabilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001F /* IntelligenceAvailabilityService.swift */; };
+		10000000000000000000001F /* OnDeviceIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000020 /* OnDeviceIntelligenceService.swift */; };
+		100000000000000000000020 /* ClaimDraftGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000021 /* ClaimDraftGenerator.swift */; };
+		100000000000000000000021 /* ClaimDraftValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000022 /* ClaimDraftValidator.swift */; };
+		100000000000000000000022 /* SmartFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000023 /* SmartFillView.swift */; };
+		100000000000000000000023 /* ClaimDraftReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000024 /* ClaimDraftReviewView.swift */; };
+		100000000000000000000024 /* ProofIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000025 /* ProofIntelligence.swift */; };
+		100000000000000000000025 /* ProofIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000026 /* ProofIntelligenceService.swift */; };
+		100000000000000000000026 /* ClaimSearchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000027 /* ClaimSearchIntent.swift */; };
+		110000000000000000000001 /* ClaimLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000001 /* ClaimLogicTests.swift */; };
+		110000000000000000000002 /* DashboardMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000002 /* DashboardMetricsTests.swift */; };
+		110000000000000000000003 /* ExportImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000003 /* ExportImportTests.swift */; };
+		110000000000000000000004 /* CalendarExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000004 /* CalendarExportTests.swift */; };
+		110000000000000000000005 /* FileStorageServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000005 /* FileStorageServiceTests.swift */; };
+		110000000000000000000006 /* ClaimDraftSmartFillTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000007 /* ClaimDraftSmartFillTests.swift */; };
+		110000000000000000000007 /* ProofIntelligenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000008 /* ProofIntelligenceTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		530000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 500000000000000000000001;
+			remoteInfo = DueProof;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		200000000000000000000001 /* DueProofApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofApp.swift; sourceTree = "<group>"; };
+		200000000000000000000002 /* Claim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Claim.swift; sourceTree = "<group>"; };
+		200000000000000000000003 /* ClaimCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimCategory.swift; sourceTree = "<group>"; };
+		200000000000000000000004 /* ClaimStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimStatus.swift; sourceTree = "<group>"; };
+		200000000000000000000005 /* ProofItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofItem.swift; sourceTree = "<group>"; };
+		200000000000000000000006 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		200000000000000000000007 /* ClaimsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimsListView.swift; sourceTree = "<group>"; };
+		200000000000000000000008 /* ClaimDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDetailView.swift; sourceTree = "<group>"; };
+		200000000000000000000009 /* ClaimEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimEditorView.swift; sourceTree = "<group>"; };
+		20000000000000000000000A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		20000000000000000000000B /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		20000000000000000000000C /* ProofGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofGalleryView.swift; sourceTree = "<group>"; };
+		20000000000000000000000D /* MetricCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCardView.swift; sourceTree = "<group>"; };
+		20000000000000000000000E /* ClaimRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimRowView.swift; sourceTree = "<group>"; };
+		20000000000000000000000F /* QuickAddGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddGridView.swift; sourceTree = "<group>"; };
+		200000000000000000000010 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		200000000000000000000011 /* FileStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStorageService.swift; sourceTree = "<group>"; };
+		200000000000000000000012 /* CalendarExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarExportService.swift; sourceTree = "<group>"; };
+		200000000000000000000013 /* ImportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExportService.swift; sourceTree = "<group>"; };
+		200000000000000000000014 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
+		200000000000000000000015 /* DateHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHelpers.swift; sourceTree = "<group>"; };
+		200000000000000000000016 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		200000000000000000000017 /* PreviewSampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSampleData.swift; sourceTree = "<group>"; };
+		200000000000000000000018 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		200000000000000000000019 /* DueProof.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DueProof.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20000000000000000000001A /* DashboardMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetrics.swift; sourceTree = "<group>"; };
+		20000000000000000000001B /* ClaimCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimCardView.swift; sourceTree = "<group>"; };
+		20000000000000000000001C /* ClaimDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraft.swift; sourceTree = "<group>"; };
+		20000000000000000000001D /* OCRResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRResult.swift; sourceTree = "<group>"; };
+		20000000000000000000001E /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
+		20000000000000000000001F /* IntelligenceAvailabilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceAvailabilityService.swift; sourceTree = "<group>"; };
+		200000000000000000000020 /* OnDeviceIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnDeviceIntelligenceService.swift; sourceTree = "<group>"; };
+		200000000000000000000021 /* ClaimDraftGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraftGenerator.swift; sourceTree = "<group>"; };
+		200000000000000000000022 /* ClaimDraftValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraftValidator.swift; sourceTree = "<group>"; };
+		200000000000000000000023 /* SmartFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFillView.swift; sourceTree = "<group>"; };
+		200000000000000000000024 /* ClaimDraftReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraftReviewView.swift; sourceTree = "<group>"; };
+		200000000000000000000025 /* ProofIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligence.swift; sourceTree = "<group>"; };
+		200000000000000000000026 /* ProofIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligenceService.swift; sourceTree = "<group>"; };
+		200000000000000000000027 /* ClaimSearchIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimSearchIntent.swift; sourceTree = "<group>"; };
+		210000000000000000000001 /* ClaimLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimLogicTests.swift; sourceTree = "<group>"; };
+		210000000000000000000002 /* DashboardMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetricsTests.swift; sourceTree = "<group>"; };
+		210000000000000000000003 /* ExportImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportImportTests.swift; sourceTree = "<group>"; };
+		210000000000000000000004 /* CalendarExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarExportTests.swift; sourceTree = "<group>"; };
+		210000000000000000000005 /* FileStorageServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStorageServiceTests.swift; sourceTree = "<group>"; };
+		210000000000000000000006 /* DueProofTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DueProofTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		210000000000000000000007 /* ClaimDraftSmartFillTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraftSmartFillTests.swift; sourceTree = "<group>"; };
+		210000000000000000000008 /* ProofIntelligenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligenceTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		300000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		310000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		400000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				400000000000000000000002 /* DueProof */,
+				410000000000000000000001 /* DueProofTests */,
+				400000000000000000000008 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		400000000000000000000002 /* DueProof */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000001 /* DueProofApp.swift */,
+				400000000000000000000003 /* Models */,
+				400000000000000000000004 /* Views */,
+				400000000000000000000005 /* Services */,
+				400000000000000000000006 /* Utilities */,
+				400000000000000000000007 /* Resources */,
+			);
+			path = DueProof;
+			sourceTree = "<group>";
+		};
+		400000000000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000002 /* Claim.swift */,
+				200000000000000000000005 /* ProofItem.swift */,
+				20000000000000000000001C /* ClaimDraft.swift */,
+				20000000000000000000001D /* OCRResult.swift */,
+				200000000000000000000025 /* ProofIntelligence.swift */,
+				200000000000000000000003 /* ClaimCategory.swift */,
+				200000000000000000000004 /* ClaimStatus.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		400000000000000000000004 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000006 /* DashboardView.swift */,
+				200000000000000000000007 /* ClaimsListView.swift */,
+				200000000000000000000008 /* ClaimDetailView.swift */,
+				200000000000000000000009 /* ClaimEditorView.swift */,
+				20000000000000000000000A /* SettingsView.swift */,
+				20000000000000000000000B /* EmptyStateView.swift */,
+				20000000000000000000000C /* ProofGalleryView.swift */,
+				20000000000000000000000D /* MetricCardView.swift */,
+				20000000000000000000001B /* ClaimCardView.swift */,
+				200000000000000000000023 /* SmartFillView.swift */,
+				200000000000000000000024 /* ClaimDraftReviewView.swift */,
+				20000000000000000000000E /* ClaimRowView.swift */,
+				20000000000000000000000F /* QuickAddGridView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		400000000000000000000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000010 /* NotificationService.swift */,
+				200000000000000000000011 /* FileStorageService.swift */,
+				200000000000000000000012 /* CalendarExportService.swift */,
+				200000000000000000000013 /* ImportExportService.swift */,
+				20000000000000000000001E /* OCRService.swift */,
+				20000000000000000000001F /* IntelligenceAvailabilityService.swift */,
+				200000000000000000000020 /* OnDeviceIntelligenceService.swift */,
+				200000000000000000000021 /* ClaimDraftGenerator.swift */,
+				200000000000000000000022 /* ClaimDraftValidator.swift */,
+				200000000000000000000026 /* ProofIntelligenceService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		400000000000000000000006 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000014 /* CurrencyFormatter.swift */,
+				200000000000000000000015 /* DateHelpers.swift */,
+				200000000000000000000016 /* AppTheme.swift */,
+				20000000000000000000001A /* DashboardMetrics.swift */,
+				200000000000000000000027 /* ClaimSearchIntent.swift */,
+				200000000000000000000017 /* PreviewSampleData.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		400000000000000000000007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000018 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		400000000000000000000008 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000019 /* DueProof.app */,
+				210000000000000000000006 /* DueProofTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		410000000000000000000001 /* DueProofTests */ = {
+			isa = PBXGroup;
+			children = (
+				210000000000000000000001 /* ClaimLogicTests.swift */,
+				210000000000000000000002 /* DashboardMetricsTests.swift */,
+				210000000000000000000003 /* ExportImportTests.swift */,
+				210000000000000000000004 /* CalendarExportTests.swift */,
+				210000000000000000000005 /* FileStorageServiceTests.swift */,
+				210000000000000000000007 /* ClaimDraftSmartFillTests.swift */,
+				210000000000000000000008 /* ProofIntelligenceTests.swift */,
+			);
+			path = DueProofTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		500000000000000000000001 /* DueProof */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 900000000000000000000004 /* Build configuration list for PBXNativeTarget "DueProof" */;
+			buildPhases = (
+				700000000000000000000001 /* Sources */,
+				300000000000000000000001 /* Frameworks */,
+				700000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DueProof;
+			productName = DueProof;
+			productReference = 200000000000000000000019 /* DueProof.app */;
+			productType = "com.apple.product-type.application";
+		};
+		510000000000000000000001 /* DueProofTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 910000000000000000000001 /* Build configuration list for PBXNativeTarget "DueProofTests" */;
+			buildPhases = (
+				710000000000000000000001 /* Sources */,
+				310000000000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				520000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = DueProofTests;
+			productName = DueProofTests;
+			productReference = 210000000000000000000006 /* DueProofTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		600000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					500000000000000000000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					510000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = 500000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = 900000000000000000000001 /* Build configuration list for PBXProject "DueProof" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 400000000000000000000001;
+			productRefGroup = 400000000000000000000008 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				500000000000000000000001 /* DueProof */,
+				510000000000000000000001 /* DueProofTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		700000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000018 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		700000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000001 /* DueProofApp.swift in Sources */,
+				100000000000000000000002 /* Claim.swift in Sources */,
+				100000000000000000000003 /* ClaimCategory.swift in Sources */,
+				100000000000000000000004 /* ClaimStatus.swift in Sources */,
+				100000000000000000000005 /* ProofItem.swift in Sources */,
+				100000000000000000000006 /* DashboardView.swift in Sources */,
+				100000000000000000000007 /* ClaimsListView.swift in Sources */,
+				100000000000000000000008 /* ClaimDetailView.swift in Sources */,
+				100000000000000000000009 /* ClaimEditorView.swift in Sources */,
+				10000000000000000000000A /* SettingsView.swift in Sources */,
+				10000000000000000000000B /* EmptyStateView.swift in Sources */,
+				10000000000000000000000C /* ProofGalleryView.swift in Sources */,
+				10000000000000000000000D /* MetricCardView.swift in Sources */,
+				10000000000000000000000E /* ClaimRowView.swift in Sources */,
+				10000000000000000000000F /* QuickAddGridView.swift in Sources */,
+				100000000000000000000010 /* NotificationService.swift in Sources */,
+				100000000000000000000011 /* FileStorageService.swift in Sources */,
+				100000000000000000000012 /* CalendarExportService.swift in Sources */,
+				100000000000000000000013 /* ImportExportService.swift in Sources */,
+				100000000000000000000014 /* CurrencyFormatter.swift in Sources */,
+				100000000000000000000015 /* DateHelpers.swift in Sources */,
+				100000000000000000000016 /* AppTheme.swift in Sources */,
+				100000000000000000000017 /* PreviewSampleData.swift in Sources */,
+				100000000000000000000019 /* DashboardMetrics.swift in Sources */,
+				10000000000000000000001A /* ClaimCardView.swift in Sources */,
+				10000000000000000000001B /* ClaimDraft.swift in Sources */,
+				10000000000000000000001C /* OCRResult.swift in Sources */,
+				10000000000000000000001D /* OCRService.swift in Sources */,
+				10000000000000000000001E /* IntelligenceAvailabilityService.swift in Sources */,
+				10000000000000000000001F /* OnDeviceIntelligenceService.swift in Sources */,
+				100000000000000000000020 /* ClaimDraftGenerator.swift in Sources */,
+				100000000000000000000021 /* ClaimDraftValidator.swift in Sources */,
+				100000000000000000000022 /* SmartFillView.swift in Sources */,
+				100000000000000000000023 /* ClaimDraftReviewView.swift in Sources */,
+				100000000000000000000024 /* ProofIntelligence.swift in Sources */,
+				100000000000000000000025 /* ProofIntelligenceService.swift in Sources */,
+				100000000000000000000026 /* ClaimSearchIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		710000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000000000000000000001 /* ClaimLogicTests.swift in Sources */,
+				110000000000000000000002 /* DashboardMetricsTests.swift in Sources */,
+				110000000000000000000003 /* ExportImportTests.swift in Sources */,
+				110000000000000000000004 /* CalendarExportTests.swift in Sources */,
+				110000000000000000000005 /* FileStorageServiceTests.swift in Sources */,
+				110000000000000000000006 /* ClaimDraftSmartFillTests.swift in Sources */,
+				110000000000000000000007 /* ProofIntelligenceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		520000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 500000000000000000000001 /* DueProof */;
+			targetProxy = 530000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		800000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		800000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		800000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = DueProof;
+				INFOPLIST_KEY_NSCameraUsageDescription = "DueProof lets you scan proof photos and stores them locally on this device.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DueProof lets you choose proof photos to store locally on this device.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		800000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = DueProof;
+				INFOPLIST_KEY_NSCameraUsageDescription = "DueProof lets you scan proof photos and stores them locally on this device.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DueProof lets you choose proof photos to store locally on this device.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		810000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DueProof.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DueProof";
+			};
+			name = Debug;
+		};
+		810000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DueProof.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DueProof";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		900000000000000000000001 /* Build configuration list for PBXProject "DueProof" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				800000000000000000000001 /* Debug */,
+				800000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		900000000000000000000004 /* Build configuration list for PBXNativeTarget "DueProof" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				800000000000000000000003 /* Debug */,
+				800000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		910000000000000000000001 /* Build configuration list for PBXNativeTarget "DueProofTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				810000000000000000000001 /* Debug */,
+				810000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 600000000000000000000001 /* Project object */;
+}
