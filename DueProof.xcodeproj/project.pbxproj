@@ -31,6 +31,7 @@
 		100000000000000000000016 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* AppTheme.swift */; };
 		100000000000000000000017 /* PreviewSampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000017 /* PreviewSampleData.swift */; };
 		100000000000000000000018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000018 /* Assets.xcassets */; };
+		100000000000000000000032 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* PrivacyInfo.xcprivacy */; };
 		100000000000000000000019 /* DashboardMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001A /* DashboardMetrics.swift */; };
 		10000000000000000000001A /* ClaimCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001B /* ClaimCardView.swift */; };
 		10000000000000000000001B /* ClaimDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001C /* ClaimDraft.swift */; };
@@ -68,9 +69,11 @@
 		120000000000000000000002 /* DueProofWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* DueProofWidget.swift */; };
 		120000000000000000000003 /* DueProofShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000030 /* DueProofShared.swift */; };
 		120000000000000000000004 /* DueProofWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* DueProofWidget.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		120000000000000000000005 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* PrivacyInfo.xcprivacy */; };
 		130000000000000000000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 230000000000000000000002 /* ShareViewController.swift */; };
 		130000000000000000000002 /* DueProofShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000030 /* DueProofShared.swift */; };
 		130000000000000000000003 /* DueProofShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 230000000000000000000001 /* DueProofShareExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		130000000000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -160,6 +163,7 @@
 		20000000000000000000002D /* DueProofShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShortcuts.swift; sourceTree = "<group>"; };
 		20000000000000000000002E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		20000000000000000000002F /* DueProof.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DueProof.entitlements; sourceTree = "<group>"; };
+		200000000000000000000035 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		200000000000000000000030 /* DueProofShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShared.swift; sourceTree = "<group>"; };
 		200000000000000000000031 /* ClaimSnapshotService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimSnapshotService.swift; sourceTree = "<group>"; };
 		200000000000000000000032 /* SharedImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedImportService.swift; sourceTree = "<group>"; };
@@ -321,6 +325,7 @@
 			children = (
 				20000000000000000000002E /* Info.plist */,
 				20000000000000000000002F /* DueProof.entitlements */,
+				200000000000000000000035 /* PrivacyInfo.xcprivacy */,
 				200000000000000000000018 /* Assets.xcassets */,
 			);
 			path = Resources;
@@ -507,6 +512,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				100000000000000000000018 /* Assets.xcassets in Resources */,
+				100000000000000000000032 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,6 +520,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				120000000000000000000005 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -521,6 +528,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				130000000000000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

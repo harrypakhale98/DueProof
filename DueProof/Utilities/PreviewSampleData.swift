@@ -10,7 +10,13 @@ enum PreviewSampleData {
             isStoredInMemoryOnly: true,
             cloudKitDatabase: .none
         )
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
+        let container: ModelContainer
+        do {
+            container = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            preconditionFailure("Preview SwiftData container could not be created: \(error)")
+        }
+
         let context = container.mainContext
 
         sampleClaims.forEach { context.insert($0) }

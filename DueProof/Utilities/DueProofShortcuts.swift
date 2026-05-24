@@ -39,7 +39,7 @@ struct DueProofAddClaimIntent: AppIntent {
     var category: DueProofShortcutCategory
 
     func perform() async throws -> some IntentResult & OpensIntent {
-        let url = DueProofShortcutURL.addClaim(category: category.claimCategory)
+        let url = try DueProofShortcutURL.addClaim(category: category.claimCategory)
         return .result(opensIntent: OpenURLIntent(url), dialog: "Opening DueProof.")
     }
 }
@@ -50,7 +50,7 @@ struct DueProofOpenUrgentIntent: AppIntent {
     static var openAppWhenRun = true
 
     func perform() async throws -> some IntentResult & OpensIntent {
-        let url = DueProofShortcutURL.search("urgent")
+        let url = try DueProofShortcutURL.search("urgent")
         return .result(opensIntent: OpenURLIntent(url), dialog: "Opening urgent claims.")
     }
 }
@@ -64,7 +64,7 @@ struct DueProofSearchClaimsIntent: AppIntent {
     var query: String
 
     func perform() async throws -> some IntentResult & OpensIntent {
-        let url = DueProofShortcutURL.search(query)
+        let url = try DueProofShortcutURL.search(query)
         return .result(opensIntent: OpenURLIntent(url), dialog: "Searching DueProof.")
     }
 }
@@ -106,17 +106,35 @@ struct DueProofShortcuts: AppShortcutsProvider {
 }
 
 private enum DueProofShortcutURL {
-    static func addClaim(category: ClaimCategory) -> URL {
-        URL(string: "dueproof://add?category=\(category.rawValue)")!
+    enum Error: Swift.Error {
+        case invalidURL
     }
 
-    static func search(_ query: String) -> URL {
+    static func addClaim(category: ClaimCategory) throws -> URL {
+        var components = URLComponents()
+        components.scheme = "dueproof"
+        components.host = "add"
+        components.queryItems = [
+            URLQueryItem(name: "category", value: category.rawValue)
+        ]
+
+        guard let url = components.url else {
+            throw Error.invalidURL
+        }
+        return url
+    }
+
+    static func search(_ query: String) throws -> URL {
         var components = URLComponents()
         components.scheme = "dueproof"
         components.host = "search"
         components.queryItems = [
             URLQueryItem(name: "q", value: query)
         ]
-        return components.url!
+
+        guard let url = components.url else {
+            throw Error.invalidURL
+        }
+        return url
     }
 }

@@ -16,7 +16,7 @@ struct SettingsView: View {
     @State private var importResult: String?
     @State private var errorMessage: String?
     @AppStorage(SyncConfiguration.iCloudSyncEnabledKey) private var iCloudSyncEnabled = false
-    @AppStorage(AppLockSettings.isEnabledKey) private var appLockEnabled = false
+    @AppStorage(AppLockSettings.isEnabledKey, store: AppLockSettings.defaults) private var appLockEnabled = false
 
     var body: some View {
         NavigationStack {

@@ -45,6 +45,16 @@ private struct DueProofWidgetView: View {
     let entry: DueProofWidgetEntry
 
     var body: some View {
+        if DueProofPrivacySettings.isAppLockEnabled {
+            lockedView
+                .widgetURL(URL(string: "dueproof://"))
+        } else {
+            unlockedView
+        }
+    }
+
+    @ViewBuilder
+    private var unlockedView: some View {
         switch family {
         case .systemMedium:
             mediumView
@@ -56,6 +66,31 @@ private struct DueProofWidgetView: View {
             smallView
                 .widgetURL(URL(string: "dueproof://search?q=urgent"))
         }
+    }
+
+    private var lockedView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: "lock.shield.fill")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.teal)
+                .accessibilityHidden(true)
+
+            Spacer(minLength: 0)
+
+            Text("DueProof Locked")
+                .font(family == .accessoryRectangular ? .caption.weight(.semibold) : .headline)
+                .lineLimit(2)
+
+            if family != .accessoryRectangular {
+                Text("Open DueProof to view private claims.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("DueProof locked. Open DueProof to view private claims.")
     }
 
     private var smallView: some View {
@@ -115,8 +150,9 @@ private struct DueProofWidgetView: View {
 
             Divider()
 
-            if let nextAction = entry.snapshot.nextAction {
-                Link(destination: URL(string: "dueproof://claim/\(nextAction.id.uuidString)")!) {
+            if let nextAction = entry.snapshot.nextAction,
+               let url = URL(string: "dueproof://claim/\(nextAction.id.uuidString)") {
+                Link(destination: url) {
                     HStack(spacing: 10) {
                         Image(systemName: nextAction.categoryIconName)
                             .foregroundStyle(.teal)

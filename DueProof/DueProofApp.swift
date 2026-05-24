@@ -11,6 +11,7 @@ struct DueProofApp: App {
     @StateObject private var route = AppRoute()
 
     init() {
+        AppLockSettings.migrateLegacyStandardDefaultIfNeeded()
         FileStorageService.shared.cleanupTemporaryExports()
 
         do {
@@ -94,7 +95,7 @@ struct DueProofApp: App {
 }
 
 private struct AppLockGate<Content: View>: View {
-    @AppStorage(AppLockSettings.isEnabledKey) private var isAppLockEnabled = false
+    @AppStorage(AppLockSettings.isEnabledKey, store: AppLockSettings.defaults) private var isAppLockEnabled = false
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var isUnlocked = false

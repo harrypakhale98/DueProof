@@ -9,6 +9,18 @@ enum DueProofShared {
     }
 }
 
+enum DueProofPrivacySettings {
+    static let appLockEnabledKey = "DueProof.appLockEnabled"
+
+    static var defaults: UserDefaults {
+        UserDefaults(suiteName: DueProofShared.appGroupIdentifier) ?? .standard
+    }
+
+    static var isAppLockEnabled: Bool {
+        defaults.bool(forKey: appLockEnabledKey)
+    }
+}
+
 enum DueProofSharedStorageError: LocalizedError {
     case appGroupUnavailable
     case unableToCreateDirectory
@@ -79,6 +91,7 @@ final class SharedClaimSnapshotStore {
         let url = try snapshotURL()
         let data = try encoder.encode(snapshot)
         try data.write(to: url, options: [.atomic])
+        try Self.protectSharedItem(at: url)
     }
 
     func load() -> SharedClaimSnapshot? {
@@ -108,9 +121,17 @@ final class SharedClaimSnapshotStore {
     private static func prepareDirectory(_ directory: URL) throws {
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try protectSharedItem(at: directory)
         } catch {
             throw DueProofSharedStorageError.unableToCreateDirectory
         }
+    }
+
+    private static func protectSharedItem(at url: URL) throws {
+        try FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: url.path
+        )
     }
 }
 
@@ -184,7 +205,9 @@ final class SharedImportQueueStore {
     func save(_ request: SharedImportRequest) throws {
         let directory = try directory(for: request.id, create: true)
         let data = try encoder.encode(request)
-        try data.write(to: directory.appendingPathComponent(requestFileName), options: [.atomic])
+        let requestURL = directory.appendingPathComponent(requestFileName)
+        try data.write(to: requestURL, options: [.atomic])
+        try protectSharedItem(at: requestURL)
     }
 
     func pendingRequestIDs() -> [UUID] {
@@ -234,7 +257,9 @@ final class SharedImportQueueStore {
     func writeFile(data: Data, originalFileName: String?, requestID: UUID) throws -> String {
         let directory = try directory(for: requestID, create: true)
         let fileName = "\(UUID().uuidString).\(safeFileExtension(from: originalFileName) ?? "dat")"
-        try data.write(to: directory.appendingPathComponent(fileName), options: [.atomic])
+        let fileURL = directory.appendingPathComponent(fileName)
+        try data.write(to: fileURL, options: [.atomic])
+        try protectSharedItem(at: fileURL)
         return fileName
     }
 
@@ -252,6 +277,7 @@ final class SharedImportQueueStore {
         if create {
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try protectSharedItem(at: directory)
             } catch {
                 throw DueProofSharedStorageError.unableToCreateDirectory
             }
@@ -264,6 +290,7 @@ final class SharedImportQueueStore {
         if create {
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try protectSharedItem(at: directory)
             } catch {
                 throw DueProofSharedStorageError.unableToCreateDirectory
             }
@@ -285,5 +312,12 @@ final class SharedImportQueueStore {
             return nil
         }
         return ext
+    }
+
+    private func protectSharedItem(at url: URL) throws {
+        try FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: url.path
+        )
     }
 }
