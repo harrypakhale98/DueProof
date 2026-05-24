@@ -57,7 +57,7 @@ Innovation: DueProof reframes receipt and warranty tracking as a private expirin
    Caption: Beat deadlines before they pass.
 
 5. Privacy
-   Caption: No account. No tracking. Stored on your iPhone.
+   Caption: No DueProof account. No tracking. Stored locally by default.
 
 ## Suggested App Preview Video
 
@@ -75,9 +75,9 @@ Scene 7: Privacy message.
 
 DueProof helps you keep proof and beat deadlines for returns, warranties, gift cards, rebates, reimbursements, renewals, subscription trials, and important documents.
 
-Create private claim cards with value at risk, deadline, proof photos, notes, and local reminders. DueProof shows what needs attention soon, what value is still at risk, and what you have already recovered.
+Create private claim cards with value at risk, deadline, proof photos, notes, machine-readable proof identifiers, and local reminders. DueProof shows what needs attention soon, what value is still at risk, and what you have already recovered.
 
-No account. No ads. No analytics. No tracking. No backend. DueProof stores claim details and proof photos locally on your iPhone.
+No DueProof account. No ads. No analytics. No tracking. No DueProof-operated backend. DueProof stores claim details and proof photos locally by default, with optional private iCloud sync controlled by you.
 
 ## Promotional Text
 
@@ -89,7 +89,7 @@ receipt, returns, warranty, gift card, reimbursement, rebate, renewal, subscript
 
 ## Featuring Nomination Copy
 
-DueProof makes invisible deadlines visible. It gives people a calm, private way to protect money, benefits, and proof before return windows, reimbursements, rebates, gift cards, or renewals slip away. Built with SwiftUI, SwiftData, PhotosUI, local notifications, and native sharing, DueProof keeps the entire workflow on device with no accounts, ads, analytics, tracking, or backend.
+DueProof makes invisible deadlines visible. It gives people a calm, private way to protect money, benefits, and proof before return windows, reimbursements, rebates, gift cards, or renewals slip away. Built with SwiftUI, SwiftData, PhotosUI, Apple Vision, local notifications, optional private iCloud sync, and native sharing, DueProof keeps the workflow Apple-native without DueProof accounts, ads, analytics, tracking, or a DueProof-operated backend.
 
 ## Five-Sentence Founder Story
 

@@ -23,6 +23,38 @@ final class ProofIntelligenceTests: XCTestCase {
         XCTAssertTrue(intelligence.summary.localizedCaseInsensitiveContains("NIKE"))
     }
 
+    func testFallbackProofAnalysisCapturesSerialAndBarcodeIdentifiers() {
+        let intelligence = ProofIntelligenceService.generateFallbackAnalysis(
+            from: """
+            Apple
+            Warranty receipt
+            Serial No: C02Z1234LVDL
+            Total $999.00
+            Purchased 05/20/2026
+            Barcode ean13: 0123456789012
+            """,
+            barcodeValues: ["0123456789012"]
+        )
+
+        XCTAssertEqual(intelligence.serialNumber, "C02Z1234LVDL")
+        XCTAssertEqual(intelligence.barcodeValues, ["0123456789012"])
+        XCTAssertEqual(intelligence.primaryIdentifier, "C02Z1234LVDL")
+        XCTAssertTrue(intelligence.summary.contains("C02Z1234LVDL"))
+    }
+
+    func testOCRSearchableTextIncludesMachineReadableIdentifiers() {
+        let result = OCRResult(
+            text: "Receipt",
+            barcodes: [
+                OCRResult.RecognizedBarcode(value: "0123456789012", symbology: "ean13")
+            ]
+        )
+
+        XCTAssertTrue(result.searchableText.contains("Receipt"))
+        XCTAssertTrue(result.searchableText.contains("Barcode ean13: 0123456789012"))
+        XCTAssertFalse(result.isEmpty)
+    }
+
     func testProofItemRoundTripsIntelligenceData() {
         let intelligence = ProofIntelligence(
             merchant: "Target",
@@ -83,6 +115,8 @@ final class ProofIntelligenceTests: XCTestCase {
                 deadline: deadline,
                 deadlineIsExplicit: true,
                 orderNumber: "ABCD-1234",
+                serialNumber: "SN-123456",
+                barcodeValues: ["0123456789012"],
                 confidence: 0.9,
                 warnings: [],
                 summary: "NIKE proof includes $140.00 and a deadline found in the proof.",
@@ -102,6 +136,8 @@ final class ProofIntelligenceTests: XCTestCase {
 
         XCTAssertTrue(ClaimSearchIntent.parse("returns due this week nike").matches(claim, referenceDate: referenceDate))
         XCTAssertTrue(ClaimSearchIntent.parse("with proof over $100 ABCD-1234").matches(claim, referenceDate: referenceDate))
+        XCTAssertTrue(ClaimSearchIntent.parse("SN-123456").matches(claim, referenceDate: referenceDate))
+        XCTAssertTrue(ClaimSearchIntent.parse("0123456789012").matches(claim, referenceDate: referenceDate))
         XCTAssertFalse(ClaimSearchIntent.parse("missing proof").matches(claim, referenceDate: referenceDate))
         XCTAssertFalse(ClaimSearchIntent.parse("gift cards").matches(claim, referenceDate: referenceDate))
     }

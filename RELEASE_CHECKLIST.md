@@ -4,8 +4,9 @@
 
 - [ ] Build passes.
 - [ ] Tests pass.
-- [ ] No backend/network dependencies.
-- [ ] No account system.
+- [ ] No DueProof-operated backend or remote push dependency.
+- [ ] No DueProof account system.
+- [ ] Optional private iCloud sync verified on/off after relaunch.
 - [ ] No ads, analytics, tracking, telemetry, or crash-reporting SDK.
 - [ ] SwiftData persistence verified after relaunch.
 - [ ] Proof photo add/remove/delete behavior verified.
@@ -49,4 +50,4 @@ Tagline: Keep proof. Beat deadlines.
 
 Short description: DueProof helps you track returns, warranties, gift cards, reimbursements, renewals, and other claim deadlines privately on your device.
 
-Privacy summary: DueProof does not use accounts, ads, analytics, tracking, or a backend. Claim details and proof photos are stored locally on your device.
+Privacy summary: DueProof does not use a DueProof account, ads, analytics, tracking, or a DueProof-operated backend. Claim details and proof photos are stored locally by default, with optional private iCloud sync controlled by the user.

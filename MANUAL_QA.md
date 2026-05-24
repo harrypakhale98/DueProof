@@ -36,4 +36,4 @@ Run this checklist on a clean simulator and again on a physical device before re
 - [ ] Confirm deleting a claim removes any associated proof photo files.
 - [ ] Confirm proof thumbnails do not crash if the local file is missing.
 - [ ] Confirm complete export copy says proof files are included and should be reviewed before sharing.
-- [ ] Confirm Privacy screen states no account, no cloud backend, no ads, no analytics, no tracking, local proof photos, user-controlled export/deletion, and local notifications.
+- [ ] Confirm Privacy screen states no DueProof account, no DueProof-operated backend, optional private iCloud sync, no ads, no analytics, no tracking, local proof photos, user-controlled export/deletion, and local notifications.

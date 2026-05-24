@@ -200,8 +200,8 @@ struct ClaimDraftReviewView: View {
                 Label(proofDisplayName, systemImage: proofType == .document ? "doc.text" : "photo")
                     .accessibilityLabel("\(proofDisplayName) proof selected")
 
-                if !ocrResult.text.isEmpty {
-                    Text("Readable text will be saved for search.")
+                if !ocrResult.searchableText.isEmpty {
+                    Text("Readable text and identifiers will be saved for search.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -290,10 +290,10 @@ struct ClaimDraftReviewView: View {
 
     @ViewBuilder
     private var extractedTextSection: some View {
-        if !ocrResult.text.isEmpty {
+        if !ocrResult.searchableText.isEmpty {
             Section {
                 DisclosureGroup("Extracted Text") {
-                    Text(ocrResult.text)
+                    Text(ocrResult.searchableText)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
@@ -364,7 +364,7 @@ struct ClaimDraftReviewView: View {
                     type: proofType,
                     localFileName: fileName,
                     displayName: proofDisplayName,
-                    extractedText: ocrResult.text.isEmpty ? nil : String(ocrResult.text.prefix(12_000)),
+                    extractedText: ocrResult.searchableText.isEmpty ? nil : String(ocrResult.searchableText.prefix(12_000)),
                     intelligence: proofIntelligence,
                     claim: claim
                 )

@@ -4,8 +4,8 @@ DueProof is designed as a local-first iOS app.
 
 ## What DueProof Does Not Use
 
-- No account.
-- No backend.
+- No DueProof account.
+- No DueProof-operated backend.
 - No ads.
 - No analytics.
 - No tracking.
@@ -16,11 +16,13 @@ DueProof does not upload your data to our servers.
 
 ## Local Data
 
-Claim details are stored locally on this device with SwiftData. Proof files are copied into DueProof's local app storage and referenced by local file name.
+Claim details are stored locally on this device with SwiftData by default. Proof files are copied into DueProof's protected app storage and referenced by local file name.
+
+Optional iCloud Sync uses the user's private iCloud database. DueProof does not run its own sync server or receive the user's claim data.
 
 Local notifications are used only for reminders the user enables.
 
-Smart Fill uses on-device text recognition. When available, DueProof uses Apple's on-device intelligence to suggest claim details. Proof is not uploaded to DueProof servers, and the user reviews suggestions before saving.
+Smart Fill uses on-device text recognition, including visible text and machine-readable identifiers such as barcodes when iOS can detect them. When available, DueProof uses Apple's on-device intelligence to suggest claim details. Proof is not uploaded to DueProof servers, and the user reviews suggestions before saving.
 
 ## Export and Deletion
 

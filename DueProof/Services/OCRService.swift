@@ -23,7 +23,7 @@ final class OCRService {
         switch type {
         case .photo:
             let result = await recognizeText(at: fileURL)
-            return normalizedSearchText(result.text)
+            return normalizedSearchText(result.searchableText)
         case .document:
             return normalizedSearchText(pdfText(at: fileURL))
         case .note:
@@ -41,6 +41,8 @@ final class OCRService {
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
 
+            let barcodeRequest = VNDetectBarcodesRequest()
+
             let handler = VNImageRequestHandler(
                 cgImage: cgImage,
                 orientation: CGImagePropertyOrientation(image.imageOrientation),
@@ -48,7 +50,7 @@ final class OCRService {
             )
 
             do {
-                try handler.perform([request])
+                try handler.perform([request, barcodeRequest])
             } catch {
                 return OCRResult(warnings: ["Text recognition could not finish for that proof image."])
             }
@@ -63,14 +65,38 @@ final class OCRService {
             let combinedText = lines.map(\.text).joined(separator: "\n")
             let confidences = lines.compactMap(\.confidence)
             let averageConfidence = confidences.isEmpty ? nil : confidences.reduce(0, +) / Double(confidences.count)
+            let barcodes = Self.recognizedBarcodes(from: barcodeRequest.results ?? [])
+            let warnings = combinedText.isEmpty && barcodes.isEmpty
+                ? ["No readable text or barcode was found in that proof image."]
+                : []
 
             return OCRResult(
                 text: combinedText,
                 lines: lines,
+                barcodes: barcodes,
                 averageConfidence: averageConfidence,
-                warnings: combinedText.isEmpty ? ["No readable text was found in that proof image."] : []
+                warnings: warnings
             )
         }.value
+    }
+
+    private static func recognizedBarcodes(from observations: [VNBarcodeObservation]) -> [OCRResult.RecognizedBarcode] {
+        var seenValues = Set<String>()
+
+        return observations.compactMap { observation in
+            guard let value = observation.payloadStringValue?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty,
+                  seenValues.insert(value).inserted
+            else {
+                return nil
+            }
+
+            return OCRResult.RecognizedBarcode(
+                value: String(value.prefix(120)),
+                symbology: observation.symbology.rawValue,
+                confidence: Double(observation.confidence)
+            )
+        }
     }
 
     private func pdfText(at url: URL) -> String {

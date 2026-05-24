@@ -125,6 +125,13 @@ struct ProofGalleryView: View {
                         .foregroundStyle(.secondary)
                         .labelStyle(.titleAndIcon)
                 }
+
+                if proof.intelligence?.primaryIdentifier != nil {
+                    Label("Identifier", systemImage: "barcode.viewfinder")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .labelStyle(.titleAndIcon)
+                }
             }
 
             Spacer()
@@ -233,6 +240,14 @@ private struct ProofPreviewView: View {
 
                 if let orderNumber = intelligence.orderNumber {
                     LabeledContent("Order", value: orderNumber)
+                }
+
+                if let serialNumber = intelligence.serialNumber {
+                    LabeledContent("Serial", value: serialNumber)
+                }
+
+                ForEach(intelligence.barcodeValues, id: \.self) { barcodeValue in
+                    LabeledContent("Barcode", value: barcodeValue)
                 }
 
                 if !intelligence.completeness.missingFields.isEmpty {

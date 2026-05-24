@@ -77,6 +77,7 @@ final class OnDeviceIntelligenceService {
         let instructions = """
         Analyze OCR text from a receipt, gift card, warranty, reimbursement, rebate, renewal, subscription, or document.
         Extract only information visible in the proof. Do not invent merchant terms.
+        Extract visible order numbers, serial numbers, UPC, EAN, QR, or barcode values when present.
         Distinguish an explicit proof deadline from a deadline inferred from policy defaults.
         Keep warnings practical and short. The result is reviewed by the user before use.
         """
@@ -152,6 +153,8 @@ final class OnDeviceIntelligenceService {
         var deadlineText: String?
         var deadlineIsExplicit: Bool?
         var orderNumber: String?
+        var serialNumber: String?
+        var barcodeValues: [String]?
         var confidence: Double?
         var warnings: [String]?
         var summary: String?
@@ -163,6 +166,10 @@ final class OnDeviceIntelligenceService {
             let purchaseDate = purchaseDateText.flatMap(ClaimDraftGenerator.parseFirstDate)
             let deadline = deadlineText.flatMap(ClaimDraftGenerator.parseFirstDate)
             let hasReadableText = !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let normalizedBarcodeValues = (barcodeValues ?? [])
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .map { String($0.prefix(120)) }
             let completeness = ProofIntelligenceService.completeness(
                 merchant: resolvedMerchant,
                 value: value,
@@ -180,6 +187,8 @@ final class OnDeviceIntelligenceService {
                 deadline: deadline,
                 deadlineIsExplicit: deadlineIsExplicit,
                 orderNumber: normalized(orderNumber),
+                serialNumber: normalized(serialNumber),
+                barcodeValues: Array(Set(normalizedBarcodeValues)).sorted(),
                 confidence: min(max(confidence ?? 0.65, 0), 1),
                 warnings: warnings ?? [],
                 summary: normalized(summary) ?? Self.summary(
@@ -188,6 +197,7 @@ final class OnDeviceIntelligenceService {
                     value: value,
                     deadline: deadline,
                     deadlineIsExplicit: deadlineIsExplicit,
+                    identifier: normalized(orderNumber) ?? normalized(serialNumber) ?? normalizedBarcodeValues.first,
                     completeness: completeness
                 ),
                 completeness: completeness
@@ -205,22 +215,24 @@ final class OnDeviceIntelligenceService {
             value: Double?,
             deadline: Date?,
             deadlineIsExplicit: Bool,
+            identifier: String?,
             completeness: ProofCompleteness
         ) -> String {
             let subject = merchant ?? category?.displayName ?? "Proof"
             let valueText = value.map(CurrencyFormatter.string) ?? "no clear value"
             let deadlineText = deadline.map { DateHelpers.deadlineText(for: $0).lowercased() } ?? "no clear deadline"
             let deadlineSource = deadlineIsExplicit ? "found in the proof" : "suggested"
+            let identifierText = identifier.map { " Identifier: \($0)." } ?? ""
 
             if completeness.score >= 0.8 {
-                return "\(subject) proof includes \(valueText) and a \(deadlineText) deadline \(deadlineSource)."
+                return "\(subject) proof includes \(valueText) and a \(deadlineText) deadline \(deadlineSource).\(identifierText)"
             }
 
             if completeness.missingFields.isEmpty {
-                return "\(subject) proof is ready to review."
+                return "\(subject) proof is ready to review.\(identifierText)"
             }
 
-            return "\(subject) proof needs review: missing \(completeness.missingFields.joined(separator: ", "))."
+            return "\(subject) proof needs review: missing \(completeness.missingFields.joined(separator: ", ")).\(identifierText)"
         }
     }
     #endif

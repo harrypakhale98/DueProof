@@ -147,7 +147,8 @@ final class SharedImportService {
                 if item.kind == .image, let image = UIImage(data: data) {
                     let fileName = try FileStorageService.shared.saveImageData(data, preferredName: item.originalFileName)
                     let ocrResult = await OCRService.shared.recognizeText(in: image)
-                    let extractedText = ocrResult.text.isEmpty ? nil : String(ocrResult.text.prefix(12_000))
+                    let searchableText = ocrResult.searchableText
+                    let extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
                     let intelligence = await ProofIntelligenceService.shared.analyze(
                         ocrResult: ocrResult,
                         categoryHint: .document

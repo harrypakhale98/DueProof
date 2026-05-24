@@ -58,7 +58,7 @@ struct SettingsView: View {
                 Text(iCloudSyncEnabled ? "Your data syncs through your private iCloud." : "Your data stays on this device.")
                     .font(.headline)
 
-                Text(iCloudSyncEnabled ? "DueProof uses your private iCloud database when iCloud Sync is on. No DueProof account, ads, analytics, or tracking." : "DueProof stores your data on this device. No account. No cloud backend. No analytics, ads, or tracking.")
+                Text(iCloudSyncEnabled ? "DueProof uses your private iCloud database when iCloud Sync is on. No DueProof account, ads, analytics, or tracking." : "DueProof stores your data on this device. No DueProof account, no DueProof-operated backend, no analytics, ads, or tracking.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -251,14 +251,14 @@ struct SettingsView: View {
 
 private struct PrivacyView: View {
     private let rows = [
-        ("No account", "person.crop.circle.badge.xmark"),
+        ("No DueProof account", "person.crop.circle.badge.xmark"),
         ("Optional private iCloud sync", "icloud"),
         ("No ads", "rectangle.slash"),
         ("No analytics", "chart.bar.xaxis"),
         ("No tracking", "location.slash"),
         ("Smart Fill uses on-device text recognition", "text.viewfinder"),
         ("You review suggestions before saving", "checkmark.seal"),
-        ("Proof photos stay on this device", "photo.on.rectangle.angled"),
+        ("Proof photos stay local unless you sync or share", "photo.on.rectangle.angled"),
         ("You control export and deletion", "externaldrive.badge.checkmark"),
         ("Local notifications are used only for reminders you enable", "bell.badge")
     ]
@@ -285,7 +285,7 @@ private struct LegalView: View {
             }
 
             Section("Privacy") {
-                Text("No account. No cloud backend. No ads. No analytics. No tracking. Your proof photos stay on this device unless you choose to export or share them through system controls.")
+                Text("No DueProof account. No DueProof-operated backend. No ads. No analytics. No tracking. Your proof photos stay on this device unless you enable private iCloud sync or choose to export or share them through system controls.")
             }
         }
         .navigationTitle("Legal")

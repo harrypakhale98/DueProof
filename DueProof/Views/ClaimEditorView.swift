@@ -448,7 +448,8 @@ struct ClaimEditorView: View {
             pendingPhotoName = "Proof Photo"
             if let image = UIImage(data: data) {
                 let result = await OCRService.shared.recognizeText(in: image)
-                pendingExtractedText = result.text.isEmpty ? nil : String(result.text.prefix(12_000))
+                let searchableText = result.searchableText
+                pendingExtractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
                 pendingProofIntelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: category)
             } else {
                 pendingExtractedText = nil

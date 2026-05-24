@@ -54,7 +54,7 @@ struct DashboardView: View {
                             }
                         }
 
-                        Label("Stored on this iPhone. No account. No tracking.", systemImage: "lock.fill")
+                        Label("Stored locally by default. No DueProof account. No tracking.", systemImage: "lock.fill")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)

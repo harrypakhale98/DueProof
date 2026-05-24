@@ -102,7 +102,17 @@ final class ClaimActionPlanService {
             items.append("Verify the merchant or provider: \(merchant).")
         }
 
+        if let identifier = primaryProofIdentifier(for: claim) {
+            items.append("Keep this proof identifier ready: \(identifier).")
+        }
+
         return Array(items.prefix(7))
+    }
+
+    private func primaryProofIdentifier(for claim: Claim) -> String? {
+        claim.proofItemsList.compactMap { proof in
+            proof.intelligence?.primaryIdentifier
+        }.first
     }
 
     private func baseChecklist(for category: ClaimCategory) -> [String] {

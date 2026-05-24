@@ -126,6 +126,8 @@ struct ClaimSearchIntent: Equatable {
                 parts.append(intelligence.merchant ?? "")
                 parts.append(intelligence.category?.displayName ?? "")
                 parts.append(intelligence.orderNumber ?? "")
+                parts.append(intelligence.serialNumber ?? "")
+                parts.append(contentsOf: intelligence.barcodeValues)
                 parts.append(intelligence.deadlineLabel)
                 parts.append(contentsOf: intelligence.warnings)
             }

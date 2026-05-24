@@ -381,7 +381,8 @@ struct ClaimDetailView: View {
             let intelligence: ProofIntelligence?
             if let image = UIImage(data: data) {
                 let result = await OCRService.shared.recognizeText(in: image)
-                extractedText = result.text.isEmpty ? nil : String(result.text.prefix(12_000))
+                let searchableText = result.searchableText
+                extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
                 intelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: claim.category)
             } else {
                 extractedText = nil
@@ -451,7 +452,8 @@ struct ClaimDetailView: View {
             let intelligence: ProofIntelligence?
             if isImage, let image = UIImage(data: data) {
                 let result = await OCRService.shared.recognizeText(in: image)
-                extractedText = result.text.isEmpty ? nil : String(result.text.prefix(12_000))
+                let searchableText = result.searchableText
+                extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
                 intelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: claim.category)
             } else if let localURL = FileStorageService.shared.url(for: fileName) {
                 extractedText = await OCRService.shared.searchableText(at: localURL, type: proofType)

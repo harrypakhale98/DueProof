@@ -10,18 +10,19 @@ Version placeholder: 1.0
 
 ## Privacy Summary
 
-DueProof does not use accounts, ads, analytics, tracking, or a backend. Claim details and proof photos are stored locally on your device.
+DueProof does not use a DueProof account, ads, analytics, tracking, or a DueProof-operated backend. Claim details and proof photos are stored locally by default, with optional private iCloud sync controlled by the user.
 
-DueProof does not upload your data to our servers. Claim data is stored with SwiftData, proof photos are copied into the app's local Documents storage, and reminders use local notifications only when the user enables them.
+DueProof does not upload your data to our servers. Claim data is stored with SwiftData, proof photos are copied into the app's protected storage, optional iCloud sync uses the user's private CloudKit database, and reminders use local notifications only when the user enables them.
 
 ## Local-First Architecture
 
 - SwiftUI app lifecycle.
 - SwiftData for claim and proof metadata persistence.
 - Local file storage for proof photos.
+- Optional private CloudKit sync through the user's iCloud account.
 - UserNotifications for local reminders.
 - ShareLink and local file generation for JSON and calendar exports.
-- No Firebase, Supabase, AWS, Google Cloud, hosted database, analytics SDK, ad SDK, crash-reporting SDK, remote push notification service, or account system.
+- No Firebase, Supabase, AWS, Google Cloud, DueProof-hosted database, analytics SDK, ad SDK, crash-reporting SDK, remote push notification service, or DueProof account system.
 
 ## Run Instructions
 
@@ -51,7 +52,7 @@ Export includes claim details and proof data. Import skips missing local proof-f
 
 ## Known Limitations
 
-- No cloud sync or account-based recovery.
+- Optional iCloud sync applies after the next app launch and depends on the user's iCloud availability.
 - Extremely large proof archives may be rejected during import to protect app responsiveness.
 - Notification delivery depends on iOS notification settings, Focus, and system scheduling behavior.
 - Calendar export requires a claim deadline.

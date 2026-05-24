@@ -125,6 +125,15 @@ private final class PDFPageWriter {
 
         if let intelligence = proof.intelligence {
             addKeyValue("Proof completeness", intelligence.completeness.displayPercent)
+            if let orderNumber = intelligence.orderNumber {
+                addKeyValue("Order", orderNumber)
+            }
+            if let serialNumber = intelligence.serialNumber {
+                addKeyValue("Serial", serialNumber)
+            }
+            for barcodeValue in intelligence.barcodeValues.prefix(3) {
+                addKeyValue("Barcode", barcodeValue)
+            }
             draw(intelligence.summary, font: .systemFont(ofSize: 10), color: .secondaryLabel, spacingAfter: 6)
         }
 

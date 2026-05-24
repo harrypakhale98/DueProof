@@ -18,7 +18,7 @@ final class ClaimDraftGenerator {
     }
 
     func generate(from ocrResult: OCRResult) async -> ClaimDraft {
-        let sourceText = ocrResult.text
+        let sourceText = ocrResult.searchableText
         var draft: ClaimDraft?
 
         if preferOnDeviceIntelligence {
