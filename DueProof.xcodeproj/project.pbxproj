@@ -45,6 +45,12 @@
 		100000000000000000000024 /* ProofIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000025 /* ProofIntelligence.swift */; };
 		100000000000000000000025 /* ProofIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000026 /* ProofIntelligenceService.swift */; };
 		100000000000000000000026 /* ClaimSearchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000027 /* ClaimSearchIntent.swift */; };
+		100000000000000000000027 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000028 /* AppRoute.swift */; };
+		100000000000000000000028 /* SpotlightIndexService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000029 /* SpotlightIndexService.swift */; };
+		100000000000000000000029 /* ClaimActionPlanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002A /* ClaimActionPlanService.swift */; };
+		10000000000000000000002A /* ProofPacketExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002B /* ProofPacketExportService.swift */; };
+		10000000000000000000002B /* ClaimReportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002C /* ClaimReportExportService.swift */; };
+		10000000000000000000002C /* DueProofShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002D /* DueProofShortcuts.swift */; };
 		110000000000000000000001 /* ClaimLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000001 /* ClaimLogicTests.swift */; };
 		110000000000000000000002 /* DashboardMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000002 /* DashboardMetricsTests.swift */; };
 		110000000000000000000003 /* ExportImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000003 /* ExportImportTests.swift */; };
@@ -52,6 +58,7 @@
 		110000000000000000000005 /* FileStorageServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000005 /* FileStorageServiceTests.swift */; };
 		110000000000000000000006 /* ClaimDraftSmartFillTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000007 /* ClaimDraftSmartFillTests.swift */; };
 		110000000000000000000007 /* ProofIntelligenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000008 /* ProofIntelligenceTests.swift */; };
+		110000000000000000000008 /* ClaimActionExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000009 /* ClaimActionExportTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +111,13 @@
 		200000000000000000000025 /* ProofIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligence.swift; sourceTree = "<group>"; };
 		200000000000000000000026 /* ProofIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligenceService.swift; sourceTree = "<group>"; };
 		200000000000000000000027 /* ClaimSearchIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimSearchIntent.swift; sourceTree = "<group>"; };
+		200000000000000000000028 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		200000000000000000000029 /* SpotlightIndexService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexService.swift; sourceTree = "<group>"; };
+		20000000000000000000002A /* ClaimActionPlanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimActionPlanService.swift; sourceTree = "<group>"; };
+		20000000000000000000002B /* ProofPacketExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofPacketExportService.swift; sourceTree = "<group>"; };
+		20000000000000000000002C /* ClaimReportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimReportExportService.swift; sourceTree = "<group>"; };
+		20000000000000000000002D /* DueProofShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShortcuts.swift; sourceTree = "<group>"; };
+		20000000000000000000002E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		210000000000000000000001 /* ClaimLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimLogicTests.swift; sourceTree = "<group>"; };
 		210000000000000000000002 /* DashboardMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetricsTests.swift; sourceTree = "<group>"; };
 		210000000000000000000003 /* ExportImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportImportTests.swift; sourceTree = "<group>"; };
@@ -112,6 +126,7 @@
 		210000000000000000000006 /* DueProofTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DueProofTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		210000000000000000000007 /* ClaimDraftSmartFillTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraftSmartFillTests.swift; sourceTree = "<group>"; };
 		210000000000000000000008 /* ProofIntelligenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligenceTests.swift; sourceTree = "<group>"; };
+		210000000000000000000009 /* ClaimActionExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimActionExportTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -195,12 +210,16 @@
 				200000000000000000000011 /* FileStorageService.swift */,
 				200000000000000000000012 /* CalendarExportService.swift */,
 				200000000000000000000013 /* ImportExportService.swift */,
+				20000000000000000000002C /* ClaimReportExportService.swift */,
 				20000000000000000000001E /* OCRService.swift */,
 				20000000000000000000001F /* IntelligenceAvailabilityService.swift */,
 				200000000000000000000020 /* OnDeviceIntelligenceService.swift */,
 				200000000000000000000021 /* ClaimDraftGenerator.swift */,
 				200000000000000000000022 /* ClaimDraftValidator.swift */,
 				200000000000000000000026 /* ProofIntelligenceService.swift */,
+				200000000000000000000029 /* SpotlightIndexService.swift */,
+				20000000000000000000002A /* ClaimActionPlanService.swift */,
+				20000000000000000000002B /* ProofPacketExportService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -211,8 +230,10 @@
 				200000000000000000000014 /* CurrencyFormatter.swift */,
 				200000000000000000000015 /* DateHelpers.swift */,
 				200000000000000000000016 /* AppTheme.swift */,
+				200000000000000000000028 /* AppRoute.swift */,
 				20000000000000000000001A /* DashboardMetrics.swift */,
 				200000000000000000000027 /* ClaimSearchIntent.swift */,
+				20000000000000000000002D /* DueProofShortcuts.swift */,
 				200000000000000000000017 /* PreviewSampleData.swift */,
 			);
 			path = Utilities;
@@ -221,6 +242,7 @@
 		400000000000000000000007 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				20000000000000000000002E /* Info.plist */,
 				200000000000000000000018 /* Assets.xcassets */,
 			);
 			path = Resources;
@@ -245,6 +267,7 @@
 				210000000000000000000005 /* FileStorageServiceTests.swift */,
 				210000000000000000000007 /* ClaimDraftSmartFillTests.swift */,
 				210000000000000000000008 /* ProofIntelligenceTests.swift */,
+				210000000000000000000009 /* ClaimActionExportTests.swift */,
 			);
 			path = DueProofTests;
 			sourceTree = "<group>";
@@ -377,6 +400,12 @@
 				100000000000000000000024 /* ProofIntelligence.swift in Sources */,
 				100000000000000000000025 /* ProofIntelligenceService.swift in Sources */,
 				100000000000000000000026 /* ClaimSearchIntent.swift in Sources */,
+				100000000000000000000027 /* AppRoute.swift in Sources */,
+				100000000000000000000028 /* SpotlightIndexService.swift in Sources */,
+				100000000000000000000029 /* ClaimActionPlanService.swift in Sources */,
+				10000000000000000000002A /* ProofPacketExportService.swift in Sources */,
+				10000000000000000000002B /* ClaimReportExportService.swift in Sources */,
+				10000000000000000000002C /* DueProofShortcuts.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,6 +420,7 @@
 				110000000000000000000005 /* FileStorageServiceTests.swift in Sources */,
 				110000000000000000000006 /* ClaimDraftSmartFillTests.swift in Sources */,
 				110000000000000000000007 /* ProofIntelligenceTests.swift in Sources */,
+				110000000000000000000008 /* ClaimActionExportTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -533,7 +563,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DueProof/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DueProof;
 				INFOPLIST_KEY_NSCameraUsageDescription = "DueProof lets you scan proof photos and stores them locally on this device.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DueProof lets you choose proof photos to store locally on this device.";
@@ -566,7 +597,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DueProof/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DueProof;
 				INFOPLIST_KEY_NSCameraUsageDescription = "DueProof lets you scan proof photos and stores them locally on this device.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DueProof lets you choose proof photos to store locally on this device.";

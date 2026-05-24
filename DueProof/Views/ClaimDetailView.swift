@@ -15,6 +15,8 @@ struct ClaimDetailView: View {
     @State private var isImportingProofFile = false
     @State private var showingDeleteConfirmation = false
     @State private var calendarURL: URL?
+    @State private var proofPacketURL: URL?
+    @State private var claimMessageURL: URL?
     @State private var errorMessage: String?
     @State private var actionPulse = 0
 
@@ -25,6 +27,7 @@ struct ClaimDetailView: View {
                 detailSection
                 reminderSection
                 calendarSection
+                claimActionSection
                 proofSection
             }
             .padding(.horizontal, 20)
@@ -209,6 +212,69 @@ struct ClaimDetailView: View {
         }
     }
 
+    private var claimActionSection: some View {
+        let plan = ClaimActionPlanService.shared.plan(for: claim)
+
+        return VStack(alignment: .leading, spacing: 14) {
+            Text("Claim Help")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 12) {
+                Label(plan.headline, systemImage: "checklist.checked")
+                    .font(.subheadline.weight(.semibold))
+
+                Text(plan.nextStep)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(plan.checklist, id: \.self) { item in
+                        Label(item, systemImage: "checkmark.circle")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                HStack {
+                    Button {
+                        createProofPacket()
+                    } label: {
+                        Label("Create Proof Packet", systemImage: "doc.richtext")
+                    }
+                    .buttonStyle(.bordered)
+
+                    if let proofPacketURL {
+                        ShareLink(item: proofPacketURL) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityLabel("Share proof packet")
+                    }
+                }
+
+                HStack {
+                    Button {
+                        createClaimMessage()
+                    } label: {
+                        Label("Create Claim Message", systemImage: "envelope")
+                    }
+                    .buttonStyle(.bordered)
+
+                    if let claimMessageURL {
+                        ShareLink(item: claimMessageURL) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityLabel("Share claim message")
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .dueProofCardBackground(cornerRadius: AppTheme.compactCornerRadius)
+        }
+    }
+
     private var bottomActionBar: some View {
         HStack(spacing: 12) {
             Button {
@@ -341,6 +407,22 @@ struct ClaimDetailView: View {
     private func createCalendarFile() {
         do {
             calendarURL = try CalendarExportService.shared.exportDeadline(for: claim)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func createProofPacket() {
+        do {
+            proofPacketURL = try ProofPacketExportService.shared.exportPacket(for: claim)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func createClaimMessage() {
+        do {
+            claimMessageURL = try ClaimActionPlanService.shared.exportMessage(for: claim)
         } catch {
             errorMessage = error.localizedDescription
         }

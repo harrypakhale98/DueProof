@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Query(sort: \Claim.createdAt, order: .reverse) private var claims: [Claim]
 
     @State private var exportURL: URL?
+    @State private var reportURL: URL?
     @State private var isImporting = false
     @State private var isConfirmingClear = false
     @State private var notificationStatus = "Unknown"
@@ -84,6 +85,18 @@ struct SettingsView: View {
             }
 
             Button {
+                createReport()
+            } label: {
+                Label("Create CSV Report", systemImage: "tablecells")
+            }
+
+            if let reportURL {
+                ShareLink(item: reportURL) {
+                    Label("Share CSV Report", systemImage: "square.and.arrow.up")
+                }
+            }
+
+            Button {
                 isImporting = true
             } label: {
                 Label("Import JSON", systemImage: "square.and.arrow.down")
@@ -148,6 +161,14 @@ struct SettingsView: View {
         }
     }
 
+    private func createReport() {
+        do {
+            reportURL = try ClaimReportExportService.shared.exportCSV(claims: claims)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private func importClaims(_ result: Result<URL, Error>) {
         do {
             let url = try result.get()
@@ -184,7 +205,9 @@ struct SettingsView: View {
             try modelContext.save()
             localFileNames.forEach { _ = FileStorageService.shared.deleteFile(named: $0) }
             try FileStorageService.shared.clearProofFiles()
+            SpotlightIndexService.shared.deleteAll()
             exportURL = nil
+            reportURL = nil
         } catch {
             errorMessage = error.localizedDescription
         }

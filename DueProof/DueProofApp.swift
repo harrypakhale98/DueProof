@@ -1,3 +1,4 @@
+import CoreSpotlight
 import SwiftData
 import SwiftUI
 
@@ -6,6 +7,7 @@ struct DueProofApp: App {
     private let modelContainer: ModelContainer
     private let launchWarning: String?
     @State private var isShowingLaunchWarning: Bool
+    @StateObject private var route = AppRoute()
 
     init() {
         FileStorageService.shared.cleanupTemporaryExports()
@@ -27,27 +29,20 @@ struct DueProofApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TabView {
-                DashboardView()
-                    .tabItem {
-                        Label("Dashboard", systemImage: "gauge.with.dots.needle.bottom.50percent")
-                    }
-
-                ClaimsListView()
-                    .tabItem {
-                        Label("Claims", systemImage: "checklist")
-                    }
-
-                SettingsView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gearshape")
-                    }
-            }
+            RootTabView()
+            .environmentObject(route)
             .tint(AppTheme.brandTint)
             .alert("Storage Needs Attention", isPresented: $isShowingLaunchWarning) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(launchWarning ?? "")
+            }
+            .onOpenURL { url in
+                route.handle(url)
+            }
+            .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
+                route.handleSpotlightIdentifier(identifier)
             }
         }
         .modelContainer(modelContainer)
@@ -84,5 +79,48 @@ struct DueProofApp: App {
         let schema = Schema([Claim.self, ProofItem.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+}
+
+private struct RootTabView: View {
+    @EnvironmentObject private var route: AppRoute
+    @Query(sort: \Claim.updatedAt, order: .reverse) private var claims: [Claim]
+
+    var body: some View {
+        TabView(selection: $route.selectedTab) {
+            DashboardView()
+                .tabItem {
+                    Label("Dashboard", systemImage: "gauge.with.dots.needle.bottom.50percent")
+                }
+                .tag(AppTab.dashboard)
+
+            ClaimsListView()
+                .tabItem {
+                    Label("Claims", systemImage: "checklist")
+                }
+                .tag(AppTab.claims)
+
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .tag(AppTab.settings)
+        }
+        .task(id: spotlightSignature) {
+            SpotlightIndexService.shared.reindex(claims: claims)
+        }
+    }
+
+    private var spotlightSignature: String {
+        claims
+            .map { claim in
+                [
+                    claim.id.uuidString,
+                    "\(claim.updatedAt.timeIntervalSince1970)",
+                    "\(claim.proofItems.count)",
+                    claim.status.rawValue
+                ].joined(separator: ":")
+            }
+            .joined(separator: "|")
     }
 }

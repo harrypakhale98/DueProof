@@ -56,14 +56,16 @@ private enum ClaimSortOption: String, CaseIterable, Identifiable {
 }
 
 struct ClaimsListView: View {
+    @EnvironmentObject private var route: AppRoute
     @Query(sort: \Claim.createdAt, order: .reverse) private var claims: [Claim]
     @State private var searchText = ""
     @State private var filter: ClaimListFilter = .all
     @State private var sortOption: ClaimSortOption = .deadline
-    @State private var isAddingClaim = false
+    @State private var editorCategory: ClaimCategory?
+    @State private var path: [UUID] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if filteredClaims.isEmpty {
                     emptyState
@@ -82,15 +84,28 @@ struct ClaimsListView: View {
                     filterAndSortMenu
 
                     Button {
-                        isAddingClaim = true
+                        editorCategory = .returnItem
                     } label: {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel("Add claim")
                 }
             }
-            .sheet(isPresented: $isAddingClaim) {
-                ClaimEditorView(initialCategory: .returnItem)
+            .navigationDestination(for: UUID.self) { claimID in
+                if let claim = claims.first(where: { $0.id == claimID }) {
+                    ClaimDetailView(claim: claim)
+                } else {
+                    ContentUnavailableView("Claim Not Found", systemImage: "magnifyingglass")
+                }
+            }
+            .sheet(item: $editorCategory) { category in
+                ClaimEditorView(initialCategory: category)
+            }
+            .onAppear {
+                handleRouteRequest(route.request)
+            }
+            .onChange(of: route.request?.id) { _, _ in
+                handleRouteRequest(route.request)
             }
         }
     }
@@ -98,9 +113,7 @@ struct ClaimsListView: View {
     private var claimsList: some View {
         List {
             ForEach(filteredClaims, id: \.id) { claim in
-                NavigationLink {
-                    ClaimDetailView(claim: claim)
-                } label: {
+                NavigationLink(value: claim.id) {
                     ClaimRowView(claim: claim)
                 }
             }
@@ -123,7 +136,7 @@ struct ClaimsListView: View {
         } actions: {
             if claims.isEmpty {
                 Button("Add First Claim") {
-                    isAddingClaim = true
+                    editorCategory = .returnItem
                 }
                 .buttonStyle(.borderedProminent)
             } else if isFilteringClaims {
@@ -180,6 +193,22 @@ struct ClaimsListView: View {
         filter = .all
     }
 
+    private func handleRouteRequest(_ request: AppRouteRequest?) {
+        guard let request else { return }
+
+        switch request.destination {
+        case .claim(let claimID):
+            clearSearchAndFilter()
+            path = [claimID]
+        case .addClaim(let category):
+            editorCategory = category
+        case .search(let query):
+            filter = .all
+            searchText = query
+            path = []
+        }
+    }
+
     private var filteredClaims: [Claim] {
         claims
             .filter(matchesSearch)
@@ -228,5 +257,6 @@ struct ClaimsListView: View {
 
 #Preview {
     ClaimsListView()
+        .environmentObject(AppRoute())
         .modelContainer(PreviewSampleData.container())
 }
