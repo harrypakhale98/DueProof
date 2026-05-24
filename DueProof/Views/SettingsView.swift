@@ -1,3 +1,4 @@
+import LocalAuthentication
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
@@ -15,11 +16,13 @@ struct SettingsView: View {
     @State private var importResult: String?
     @State private var errorMessage: String?
     @AppStorage(SyncConfiguration.iCloudSyncEnabledKey) private var iCloudSyncEnabled = false
+    @AppStorage(AppLockSettings.isEnabledKey) private var appLockEnabled = false
 
     var body: some View {
         NavigationStack {
             Form {
                 privacySummarySection
+                securitySection
                 dataSection
                 syncSection
                 notificationSection
@@ -69,6 +72,26 @@ struct SettingsView: View {
             } label: {
                 Label("Privacy", systemImage: "hand.raised.fill")
             }
+        }
+    }
+
+    private var securitySection: some View {
+        Section {
+            Toggle(isOn: Binding(get: {
+                appLockEnabled
+            }, set: { isEnabled in
+                if isEnabled {
+                    enableAppLockIfAvailable()
+                } else {
+                    appLockEnabled = false
+                }
+            })) {
+                Label("Require Face ID or Passcode", systemImage: "lock.shield")
+            }
+        } header: {
+            Text("Security")
+        } footer: {
+            Text("App Lock uses device authentication to hide claim details and proof when DueProof becomes active. It does not upload or share biometric data.")
         }
     }
 
@@ -170,6 +193,19 @@ struct SettingsView: View {
         importResult = nil
     }
 
+    private func enableAppLockIfAvailable() {
+        let context = LAContext()
+        var error: NSError?
+
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            appLockEnabled = false
+            errorMessage = "Set up Face ID, Touch ID, or a device passcode before turning on App Lock."
+            return
+        }
+
+        appLockEnabled = true
+    }
+
     private func createExport() {
         do {
             exportURL = try ImportExportService.shared.exportClaims(claims)
@@ -256,6 +292,7 @@ private struct PrivacyView: View {
         ("No ads", "rectangle.slash"),
         ("No analytics", "chart.bar.xaxis"),
         ("No tracking", "location.slash"),
+        ("Optional Face ID or passcode app lock", "lock.shield"),
         ("Smart Fill uses on-device text recognition", "text.viewfinder"),
         ("You review suggestions before saving", "checkmark.seal"),
         ("Proof photos stay local unless you sync or share", "photo.on.rectangle.angled"),

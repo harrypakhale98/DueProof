@@ -48,6 +48,9 @@ struct ClaimRecord: Codable {
     var valueAtRisk: Double
     var deadline: Date?
     var reminderDate: Date?
+    var referenceNumber: String?
+    var policySummary: String
+    var actionURLString: String?
     var notes: String
     var status: ClaimStatus
     var proofItems: [ProofItemRecord]
@@ -64,6 +67,9 @@ struct ClaimRecord: Codable {
         case valueAtRisk
         case deadline
         case reminderDate
+        case referenceNumber
+        case policySummary
+        case actionURLString
         case notes
         case status
         case proofItems
@@ -81,6 +87,9 @@ struct ClaimRecord: Codable {
         valueAtRisk: Double,
         deadline: Date?,
         reminderDate: Date?,
+        referenceNumber: String?,
+        policySummary: String,
+        actionURLString: String?,
         notes: String,
         status: ClaimStatus,
         proofItems: [ProofItemRecord],
@@ -96,6 +105,9 @@ struct ClaimRecord: Codable {
         self.valueAtRisk = valueAtRisk
         self.deadline = deadline
         self.reminderDate = reminderDate
+        self.referenceNumber = referenceNumber
+        self.policySummary = policySummary
+        self.actionURLString = actionURLString
         self.notes = notes
         self.status = status
         self.proofItems = proofItems
@@ -117,6 +129,9 @@ struct ClaimRecord: Codable {
         valueAtRisk = max(0, try container.decodeIfPresent(Double.self, forKey: .valueAtRisk) ?? 0)
         deadline = try container.decodeIfPresent(Date.self, forKey: .deadline)
         reminderDate = try container.decodeIfPresent(Date.self, forKey: .reminderDate)
+        referenceNumber = try container.decodeIfPresent(String.self, forKey: .referenceNumber)
+        policySummary = try container.decodeIfPresent(String.self, forKey: .policySummary) ?? ""
+        actionURLString = try container.decodeIfPresent(String.self, forKey: .actionURLString)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         status = Self.decodeStatus(from: container) ?? .active
         proofItems = try container.decodeIfPresent([ProofItemRecord].self, forKey: .proofItems) ?? []
@@ -273,6 +288,9 @@ final class ImportExportService {
                 valueAtRisk: claim.valueAtRisk,
                 deadline: claim.deadline,
                 reminderDate: claim.reminderDate,
+                referenceNumber: claim.referenceNumber,
+                policySummary: claim.policySummary,
+                actionURLString: claim.actionURLString,
                 notes: claim.notes,
                 status: claim.status,
                 proofItems: claim.proofItemsList.map {
@@ -347,6 +365,9 @@ final class ImportExportService {
                 valueAtRisk: record.valueAtRisk,
                 deadline: record.deadline,
                 reminderDate: record.reminderDate,
+                referenceNumber: Self.optionalTrim(record.referenceNumber, limit: 120),
+                policySummary: Self.trim(record.policySummary, limit: 1_500),
+                actionURLString: Self.optionalTrim(record.actionURLString, limit: 500),
                 notes: Self.trim(record.notes, limit: 4_000),
                 status: record.status,
                 createdAt: record.createdAt,

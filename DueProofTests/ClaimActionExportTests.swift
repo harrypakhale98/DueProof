@@ -9,7 +9,10 @@ final class ClaimActionExportTests: XCTestCase {
             category: .warranty,
             merchant: "Apple",
             valueAtRisk: 499,
-            deadline: DateHelpers.calendar.date(byAdding: .day, value: 45, to: Date())
+            deadline: DateHelpers.calendar.date(byAdding: .day, value: 45, to: Date()),
+            referenceNumber: "APL-SN-1234",
+            policySummary: "AppleCare coverage through the deadline.",
+            actionURLString: "https://support.apple.com"
         )
 
         let plan = ClaimActionPlanService.shared.plan(for: claim)
@@ -18,7 +21,12 @@ final class ClaimActionExportTests: XCTestCase {
         XCTAssertTrue(plan.nextStep.contains("Attach proof"))
         XCTAssertTrue(plan.checklist.contains("Attach proof before sending the claim."))
         XCTAssertTrue(plan.checklist.contains("Gather purchase proof, serial number, and product photos."))
+        XCTAssertTrue(plan.checklist.contains("Keep this reference ready: APL-SN-1234."))
+        XCTAssertTrue(plan.checklist.contains("Review the saved policy note before acting."))
+        XCTAssertTrue(plan.checklist.contains("Use the saved action link for support, cancellation, or submission."))
         XCTAssertTrue(plan.messageSubject.contains("Apple Warranty"))
+        XCTAssertTrue(plan.messageBody.contains("Reference: APL-SN-1234"))
+        XCTAssertTrue(plan.messageBody.contains("Action link: https://support.apple.com"))
         XCTAssertTrue(plan.messageBody.contains("Value at risk:"))
         XCTAssertTrue(plan.messageBody.contains("499"))
     }
@@ -29,6 +37,9 @@ final class ClaimActionExportTests: XCTestCase {
             category: .returnItem,
             merchant: "Store",
             valueAtRisk: 35.5,
+            referenceNumber: "RET-35",
+            policySummary: "Bring receipt, tags, and original packaging.",
+            actionURLString: "https://store.example/returns",
             notes: "Line 1\nLine 2"
         )
 
@@ -36,6 +47,9 @@ final class ClaimActionExportTests: XCTestCase {
         let csv = try String(contentsOf: url, encoding: .utf8)
 
         XCTAssertTrue(csv.contains("Title,Category,Merchant,Status"))
+        XCTAssertTrue(csv.contains("Reference,Policy Summary,Action URL"))
+        XCTAssertTrue(csv.contains("RET-35"))
+        XCTAssertTrue(csv.contains("https://store.example/returns"))
         XCTAssertTrue(csv.contains("\"Return, quoted \"\"bag\"\"\""))
         XCTAssertTrue(csv.contains("\"Line 1\nLine 2\""))
     }

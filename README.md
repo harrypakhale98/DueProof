@@ -10,7 +10,7 @@ Version placeholder: 1.0
 
 ## Privacy Summary
 
-DueProof does not use a DueProof account, ads, analytics, tracking, or a DueProof-operated backend. Claim details and proof photos are stored locally by default, with optional private iCloud sync controlled by the user.
+DueProof does not use a DueProof account, ads, analytics, tracking, or a DueProof-operated backend. Claim details and proof photos are stored locally by default, with optional private iCloud sync and optional app lock controlled by the user.
 
 DueProof does not upload your data to our servers. Claim data is stored with SwiftData, proof photos are copied into the app's protected storage, optional iCloud sync uses the user's private CloudKit database, and reminders use local notifications only when the user enables them.
 
@@ -20,6 +20,7 @@ DueProof does not upload your data to our servers. Claim data is stored with Swi
 - SwiftData for claim and proof metadata persistence.
 - Local file storage for proof photos.
 - Optional private CloudKit sync through the user's iCloud account.
+- Optional Face ID, Touch ID, or passcode app lock through device authentication.
 - UserNotifications for local reminders.
 - ShareLink and local file generation for JSON and calendar exports.
 - No Firebase, Supabase, AWS, Google Cloud, DueProof-hosted database, analytics SDK, ad SDK, crash-reporting SDK, remote push notification service, or DueProof account system.

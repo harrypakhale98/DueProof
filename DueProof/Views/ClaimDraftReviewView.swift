@@ -24,6 +24,9 @@ struct ClaimDraftReviewView: View {
     @State private var deadline: Date
     @State private var reminderEnabled: Bool
     @State private var reminderDate: Date
+    @State private var referenceNumber: String
+    @State private var policySummary: String
+    @State private var actionURLString: String
     @State private var notes: String
     @State private var warnings: [String]
     @State private var errorMessage: String?
@@ -33,6 +36,8 @@ struct ClaimDraftReviewView: View {
         case title
         case merchant
         case value
+        case reference
+        case actionURL
     }
 
     init(
@@ -67,6 +72,9 @@ struct ClaimDraftReviewView: View {
         _deadline = State(initialValue: resolvedDeadline)
         _reminderEnabled = State(initialValue: draft.reminderDate != nil)
         _reminderDate = State(initialValue: max(resolvedReminder, Date().addingTimeInterval(60 * 60)))
+        _referenceNumber = State(initialValue: proofIntelligence?.primaryIdentifier ?? "")
+        _policySummary = State(initialValue: proofIntelligence?.summary ?? "")
+        _actionURLString = State(initialValue: "")
         _notes = State(initialValue: draft.notes ?? "")
         _warnings = State(initialValue: draft.warnings)
     }
@@ -80,6 +88,7 @@ struct ClaimDraftReviewView: View {
             claimSection
             valueSection
             deadlineSection
+            actionDetailsSection
             reminderSection
             notesSection
             extractedTextSection
@@ -260,6 +269,31 @@ struct ClaimDraftReviewView: View {
         }
     }
 
+    private var actionDetailsSection: some View {
+        Section {
+            TextField("Reference, order, serial, or claim number", text: $referenceNumber)
+                .textInputAutocapitalization(.characters)
+                .focused($focusedField, equals: .reference)
+                .accessibilityLabel("Reference, order, serial, or claim number")
+
+            TextField("Action, support, or cancellation URL", text: $actionURLString)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(.URL)
+                .textContentType(.URL)
+                .focused($focusedField, equals: .actionURL)
+                .accessibilityLabel("Action, support, or cancellation URL")
+
+            TextEditor(text: $policySummary)
+                .frame(minHeight: 80)
+                .accessibilityLabel("Policy, terms, or next-step summary")
+        } header: {
+            Text("Action Details")
+        } footer: {
+            Text("Keep the claim number, policy notes, or cancellation link with the proof.")
+        }
+    }
+
     private var reminderSection: some View {
         Section {
             Toggle("Remind me", isOn: $reminderEnabled)
@@ -346,6 +380,9 @@ struct ClaimDraftReviewView: View {
                 valueAtRisk: parsedValue,
                 deadline: hasDeadline ? deadline : nil,
                 reminderDate: reminderEnabled ? reminderDate : nil,
+                referenceNumber: normalizedOptional(referenceNumber, limit: 120),
+                policySummary: normalizedRequired(policySummary, limit: 1_500),
+                actionURLString: normalizedOptional(actionURLString, limit: 500),
                 notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
                 status: .active
             )
@@ -383,6 +420,15 @@ struct ClaimDraftReviewView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func normalizedOptional(_ value: String, limit: Int) -> String? {
+        let normalized = normalizedRequired(value, limit: limit)
+        return normalized.isEmpty ? nil : normalized
+    }
+
+    private func normalizedRequired(_ value: String, limit: Int) -> String {
+        String(value.trimmingCharacters(in: .whitespacesAndNewlines).prefix(limit))
     }
 }
 

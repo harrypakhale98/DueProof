@@ -102,11 +102,20 @@ final class ClaimActionPlanService {
             items.append("Verify the merchant or provider: \(merchant).")
         }
 
-        if let identifier = primaryProofIdentifier(for: claim) {
-            items.append("Keep this proof identifier ready: \(identifier).")
+        if let identifier = claim.primaryReference ?? primaryProofIdentifier(for: claim) {
+            items.append("Keep this reference ready: \(identifier).")
         }
 
-        return Array(items.prefix(7))
+        let policySummary = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !policySummary.isEmpty {
+            items.append("Review the saved policy note before acting.")
+        }
+
+        if claim.actionURL != nil {
+            items.append("Use the saved action link for support, cancellation, or submission.")
+        }
+
+        return Array(items.prefix(9))
     }
 
     private func primaryProofIdentifier(for claim: Claim) -> String? {
@@ -181,6 +190,10 @@ final class ClaimActionPlanService {
 
     private func messageBody(for claim: Claim, deadlineText: String) -> String {
         let merchantLine = claim.merchant.map { "Provider: \($0)\n" } ?? ""
+        let referenceLine = claim.primaryReference.map { "Reference: \($0)\n" } ?? ""
+        let policy = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
+        let policyLine = policy.isEmpty ? "" : "Policy note: \(policy)\n"
+        let actionLine = claim.actionURLString.map { "Action link: \($0)\n" } ?? ""
         let proofLine = claim.proofItemsList.isEmpty
             ? "I can provide proof of purchase or supporting documents if needed."
             : "I have attached the relevant proof for review."
@@ -193,7 +206,7 @@ final class ClaimActionPlanService {
         \(merchantLine)Claim type: \(claim.categoryDisplayName)
         Value at risk: \(claim.displayValue)
         Deadline: \(deadlineText)
-        Current status: \(claim.statusDisplayName)
+        \(referenceLine)\(policyLine)\(actionLine)Current status: \(claim.statusDisplayName)
 
         \(proofLine)
 

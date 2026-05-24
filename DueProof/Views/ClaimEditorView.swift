@@ -18,6 +18,9 @@ struct ClaimEditorView: View {
     @State private var hasDeadline: Bool
     @State private var deadline: Date
     @State private var status: ClaimStatus
+    @State private var referenceNumber: String
+    @State private var policySummary: String
+    @State private var actionURLString: String
     @State private var notes: String
     @State private var reminderEnabled: Bool
     @State private var reminderDate: Date
@@ -36,6 +39,8 @@ struct ClaimEditorView: View {
         case title
         case merchant
         case value
+        case reference
+        case actionURL
     }
 
     init(claim: Claim? = nil, initialCategory: ClaimCategory = .returnItem) {
@@ -53,6 +58,9 @@ struct ClaimEditorView: View {
         _hasDeadline = State(initialValue: defaultDeadline != nil)
         _deadline = State(initialValue: defaultDeadline ?? Date())
         _status = State(initialValue: claim?.status ?? .active)
+        _referenceNumber = State(initialValue: claim?.referenceNumber ?? "")
+        _policySummary = State(initialValue: claim?.policySummary ?? "")
+        _actionURLString = State(initialValue: claim?.actionURLString ?? "")
         _notes = State(initialValue: claim?.notes ?? "")
         _reminderEnabled = State(initialValue: claim == nil ? Self.defaultReminderEnabled(for: resolvedCategory) : claim?.reminderDate != nil)
         _reminderDate = State(initialValue: defaultReminder ?? Date())
@@ -130,6 +138,29 @@ struct ClaimEditorView: View {
                     Text("Deadline")
                 } footer: {
                     Text(defaultsSummary)
+                }
+
+                Section {
+                    TextField("Reference, order, serial, or claim number", text: $referenceNumber)
+                        .textInputAutocapitalization(.characters)
+                        .focused($focusedField, equals: .reference)
+                        .accessibilityLabel("Reference, order, serial, or claim number")
+
+                    TextField("Action, support, or cancellation URL", text: $actionURLString)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                        .textContentType(.URL)
+                        .focused($focusedField, equals: .actionURL)
+                        .accessibilityLabel("Action, support, or cancellation URL")
+
+                    TextEditor(text: $policySummary)
+                        .frame(minHeight: 80)
+                        .accessibilityLabel("Policy, terms, or next-step summary")
+                } header: {
+                    Text("Action Details")
+                } footer: {
+                    Text("Use this for warranty terms, return policy notes, gift card balance rules, claim numbers, or cancellation links.")
                 }
 
                 Section {
@@ -333,6 +364,9 @@ struct ClaimEditorView: View {
                 claim.valueAtRisk = value
                 claim.deadline = resolvedDeadline
                 claim.reminderDate = resolvedReminder
+                claim.referenceNumber = normalizedOptional(referenceNumber, limit: 120)
+                claim.policySummary = normalizedRequired(policySummary, limit: 1_500)
+                claim.actionURLString = normalizedOptional(actionURLString, limit: 500)
                 claim.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
                 claim.status = status
                 applyCompletionState(to: claim)
@@ -346,6 +380,9 @@ struct ClaimEditorView: View {
                     valueAtRisk: value,
                     deadline: resolvedDeadline,
                     reminderDate: resolvedReminder,
+                    referenceNumber: normalizedOptional(referenceNumber, limit: 120),
+                    policySummary: normalizedRequired(policySummary, limit: 1_500),
+                    actionURLString: normalizedOptional(actionURLString, limit: 500),
                     notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
                     status: status
                 )
@@ -416,6 +453,15 @@ struct ClaimEditorView: View {
         case .other:
             false
         }
+    }
+
+    private func normalizedOptional(_ value: String, limit: Int) -> String? {
+        let normalized = normalizedRequired(value, limit: limit)
+        return normalized.isEmpty ? nil : normalized
+    }
+
+    private func normalizedRequired(_ value: String, limit: Int) -> String {
+        String(value.trimmingCharacters(in: .whitespacesAndNewlines).prefix(limit))
     }
 
     private func normalizeReminderDateIfNeeded() {

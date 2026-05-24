@@ -10,6 +10,9 @@ final class Claim {
     var valueAtRisk: Double = 0
     var deadline: Date?
     var reminderDate: Date?
+    var referenceNumber: String?
+    var policySummary: String = ""
+    var actionURLString: String?
     var notes: String = ""
     var status: ClaimStatus = ClaimStatus.active
     @Relationship(deleteRule: .cascade, inverse: \ProofItem.claim) var proofItems: [ProofItem]?
@@ -26,6 +29,9 @@ final class Claim {
         valueAtRisk: Double,
         deadline: Date? = nil,
         reminderDate: Date? = nil,
+        referenceNumber: String? = nil,
+        policySummary: String = "",
+        actionURLString: String? = nil,
         notes: String = "",
         status: ClaimStatus = .active,
         proofItems: [ProofItem] = [],
@@ -41,6 +47,9 @@ final class Claim {
         self.valueAtRisk = valueAtRisk
         self.deadline = deadline
         self.reminderDate = reminderDate
+        self.referenceNumber = referenceNumber
+        self.policySummary = policySummary
+        self.actionURLString = actionURLString
         self.notes = notes
         self.status = status
         self.proofItems = proofItems
@@ -82,6 +91,27 @@ final class Claim {
 
     var recoveredDisplayValue: String {
         CurrencyFormatter.string(recoveredValue)
+    }
+
+    var actionURL: URL? {
+        guard let actionURLString else { return nil }
+        let trimmed = actionURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed),
+              let scheme = url.scheme?.lowercased(),
+              ["http", "https", "mailto", "tel"].contains(scheme)
+        else {
+            return nil
+        }
+        return url
+    }
+
+    var primaryReference: String? {
+        let explicitReference = referenceNumber?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let explicitReference, !explicitReference.isEmpty {
+            return explicitReference
+        }
+
+        return proofItemsList.compactMap { $0.intelligence?.primaryIdentifier }.first
     }
 
     var urgencyLabel: String {

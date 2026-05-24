@@ -25,6 +25,7 @@ struct ClaimDetailView: View {
             VStack(alignment: .leading, spacing: 18) {
                 headerCard
                 detailSection
+                actionDetailsSection
                 reminderSection
                 calendarSection
                 claimActionSection
@@ -108,6 +109,46 @@ struct ClaimDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
                     .dueProofCardBackground(cornerRadius: AppTheme.compactCornerRadius)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var actionDetailsSection: some View {
+        let reference = claim.primaryReference
+        let policy = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if reference != nil || !policy.isEmpty || claim.actionURL != nil {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Action Details")
+                    .font(.headline)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    if let reference {
+                        LabeledContent("Reference") {
+                            Text(reference)
+                                .textSelection(.enabled)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+
+                    if !policy.isEmpty {
+                        Text(policy)
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+                    }
+
+                    if let actionURL = claim.actionURL {
+                        Link(destination: actionURL) {
+                            Label("Open Action Link", systemImage: "arrow.up.right.square")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .padding(16)
+                .dueProofCardBackground(cornerRadius: AppTheme.compactCornerRadius)
             }
         }
     }

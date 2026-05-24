@@ -94,6 +94,14 @@ final class SpotlightIndexService {
             values.append(merchant)
         }
 
+        if let reference = claim.primaryReference {
+            values.append(reference)
+        }
+
+        if claim.actionURL != nil {
+            values.append("action link")
+        }
+
         if claim.proofItemsList.isEmpty {
             values.append("missing proof")
         }
@@ -107,7 +115,10 @@ final class SpotlightIndexService {
             claim.categoryDisplayName,
             claim.statusDisplayName,
             claim.urgencyLabel,
-            claim.notes
+            claim.notes,
+            claim.referenceNumber ?? "",
+            claim.policySummary,
+            claim.actionURLString ?? ""
         ]
 
         if let merchant = claim.merchant {

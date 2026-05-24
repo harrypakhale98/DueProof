@@ -12,6 +12,9 @@ final class ExportImportTests: XCTestCase {
             merchant: "Nike",
             valueAtRisk: 140,
             deadline: DateHelpers.calendar.date(byAdding: .day, value: 7, to: Date()),
+            referenceNumber: "NKE-RETURN-140",
+            policySummary: "30 day return window; original packaging requested.",
+            actionURLString: "https://nike.example/returns",
             notes: "Receipt in bag."
         )
 
@@ -20,6 +23,10 @@ final class ExportImportTests: XCTestCase {
         let context = container.mainContext
 
         XCTAssertEqual(try ImportExportService.shared.importClaims(from: exportURL, into: context), 1)
+        let imported = try XCTUnwrap(context.fetch(FetchDescriptor<Claim>()).first)
+        XCTAssertEqual(imported.referenceNumber, "NKE-RETURN-140")
+        XCTAssertEqual(imported.policySummary, "30 day return window; original packaging requested.")
+        XCTAssertEqual(imported.actionURLString, "https://nike.example/returns")
         XCTAssertEqual(try context.fetch(FetchDescriptor<Claim>()).count, 1)
         XCTAssertEqual(try ImportExportService.shared.importClaims(from: exportURL, into: context), 0)
         XCTAssertEqual(try context.fetch(FetchDescriptor<Claim>()).count, 1)
@@ -49,6 +56,9 @@ final class ExportImportTests: XCTestCase {
         XCTAssertEqual(imported.title, "Minimal import")
         XCTAssertEqual(imported.category, .giftCard)
         XCTAssertNil(imported.deadline)
+        XCTAssertNil(imported.referenceNumber)
+        XCTAssertEqual(imported.policySummary, "")
+        XCTAssertNil(imported.actionURLString)
     }
 
     func testMalformedJSONThrowsWithoutCreatingRecords() throws {
@@ -141,6 +151,7 @@ final class ExportImportTests: XCTestCase {
         decoder.dateDecodingStrategy = .iso8601
         let bundle = try decoder.decode(ClaimExportBundle.self, from: Data(contentsOf: exportURL))
         XCTAssertTrue(bundle.includesBinaryProofData)
+        XCTAssertEqual(bundle.claims.first?.policySummary, "")
         XCTAssertNotNil(bundle.claims.first?.proofItems.first?.binaryProofData)
         XCTAssertEqual(bundle.claims.first?.proofItems.first?.extractedText, "Nike total 50 return by June 20")
         XCTAssertEqual(bundle.claims.first?.proofItems.first?.intelligence?.orderNumber, "NKE-5000")

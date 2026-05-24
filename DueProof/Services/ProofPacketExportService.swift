@@ -26,8 +26,16 @@ final class ProofPacketExportService {
             writer.addKeyValue("Deadline", DateHelpers.deadlineText(for: claim.deadline))
             writer.addKeyValue("Reminder", claim.reminderDate.map(DateHelpers.fullDate) ?? "No reminder set")
             writer.addKeyValue("Merchant", claim.merchant ?? "Not set")
+            writer.addKeyValue("Reference", claim.primaryReference ?? "Not set")
+            writer.addKeyValue("Action Link", claim.actionURLString ?? "Not set")
             writer.addKeyValue("Created", DateHelpers.fullDate(claim.createdAt))
             writer.addKeyValue("Updated", DateHelpers.fullDate(claim.updatedAt))
+
+            let policySummary = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !policySummary.isEmpty {
+                writer.addSection("Policy Note")
+                writer.addBody(policySummary)
+            }
 
             let actionPlan = ClaimActionPlanService.shared.plan(for: claim)
             writer.addSection("Next Action")

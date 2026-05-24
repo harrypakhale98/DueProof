@@ -1,4 +1,5 @@
 import CoreSpotlight
+import LocalAuthentication
 import SwiftData
 import SwiftUI
 
@@ -29,20 +30,22 @@ struct DueProofApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
-            .environmentObject(route)
-            .tint(AppTheme.brandTint)
-            .alert("Storage Needs Attention", isPresented: $isShowingLaunchWarning) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(launchWarning ?? "")
-            }
-            .onOpenURL { url in
-                route.handle(url)
-            }
-            .onContinueUserActivity(CSSearchableItemActionType) { activity in
-                guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
-                route.handleSpotlightIdentifier(identifier)
+            AppLockGate {
+                RootTabView()
+                    .environmentObject(route)
+                    .tint(AppTheme.brandTint)
+                    .alert("Storage Needs Attention", isPresented: $isShowingLaunchWarning) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text(launchWarning ?? "")
+                    }
+                    .onOpenURL { url in
+                        route.handle(url)
+                    }
+                    .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                        guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
+                        route.handleSpotlightIdentifier(identifier)
+                    }
             }
         }
         .modelContainer(modelContainer)
@@ -87,6 +90,127 @@ struct DueProofApp: App {
             cloudKitDatabase: .none
         )
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+}
+
+private struct AppLockGate<Content: View>: View {
+    @AppStorage(AppLockSettings.isEnabledKey) private var isAppLockEnabled = false
+    @Environment(\.scenePhase) private var scenePhase
+
+    @State private var isUnlocked = false
+    @State private var authenticationMessage: String?
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    private var shouldLock: Bool {
+        isAppLockEnabled && !isUnlocked
+    }
+
+    var body: some View {
+        ZStack {
+            content
+                .privacySensitive(isAppLockEnabled)
+                .blur(radius: shouldLock ? 16 : 0)
+                .disabled(shouldLock)
+                .accessibilityHidden(shouldLock)
+
+            if shouldLock {
+                lockedView
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.18), value: shouldLock)
+        .task {
+            guard isAppLockEnabled else {
+                isUnlocked = true
+                return
+            }
+            await authenticate()
+        }
+        .onChange(of: isAppLockEnabled) { _, enabled in
+            if enabled {
+                isUnlocked = false
+                Task { await authenticate() }
+            } else {
+                isUnlocked = true
+                authenticationMessage = nil
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard isAppLockEnabled else { return }
+            if phase == .active {
+                Task { await authenticate() }
+            } else {
+                isUnlocked = false
+            }
+        }
+    }
+
+    private var lockedView: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: 48, weight: .semibold))
+                .foregroundStyle(AppTheme.brandTint)
+                .accessibilityHidden(true)
+
+            VStack(spacing: 6) {
+                Text("DueProof Locked")
+                    .font(.title2.weight(.semibold))
+
+                Text(authenticationMessage ?? "Unlock to view private claims and proof.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                Task { await authenticate() }
+            } label: {
+                Label("Unlock", systemImage: "faceid")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(AppTheme.brandTint)
+        }
+        .padding(24)
+        .frame(maxWidth: 360)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: AppTheme.compactCornerRadius, style: .continuous))
+        .padding(24)
+    }
+
+    @MainActor
+    private func authenticate() async {
+        guard isAppLockEnabled else {
+            isUnlocked = true
+            return
+        }
+
+        let context = LAContext()
+        context.localizedCancelTitle = "Cancel"
+
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            authenticationMessage = nil
+            isAppLockEnabled = false
+            isUnlocked = true
+            return
+        }
+
+        do {
+            let didUnlock = try await context.evaluatePolicy(
+                .deviceOwnerAuthentication,
+                localizedReason: "Unlock DueProof to view private claims and proof."
+            )
+            isUnlocked = didUnlock
+            authenticationMessage = didUnlock ? nil : "DueProof is locked."
+        } catch {
+            authenticationMessage = "DueProof is locked."
+            isUnlocked = false
+        }
     }
 }
 

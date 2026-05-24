@@ -67,6 +67,26 @@ final class ClaimLogicTests: XCTestCase {
         XCTAssertEqual(claim.status, .expired)
     }
 
+    func testActionMetadataIsSearchableAndURLValidated() {
+        let claim = Claim(
+            title: "Streaming trial",
+            category: .subscription,
+            merchant: "StreamCo",
+            valueAtRisk: 19.99,
+            referenceNumber: "SUB-987",
+            policySummary: "Cancel before renewal to avoid annual charge.",
+            actionURLString: "https://stream.example/cancel"
+        )
+
+        XCTAssertEqual(claim.actionURL?.host, "stream.example")
+        XCTAssertTrue(ClaimSearchIntent.parse("SUB-987").matches(claim))
+        XCTAssertTrue(ClaimSearchIntent.parse("annual charge").matches(claim))
+        XCTAssertTrue(ClaimSearchIntent.parse("stream example cancel").matches(claim))
+
+        claim.actionURLString = "javascript:alert(1)"
+        XCTAssertNil(claim.actionURL)
+    }
+
     @MainActor
     func testNotificationIdentifierIsStableAndClaimScoped() {
         let id = UUID(uuidString: "8EED90D8-87E6-4F1F-B978-7CE78F8D9071")!

@@ -35,6 +35,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>DueProof lets you scan proof photos and stores them locally on this device.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>DueProof uses Face ID to unlock your private claims and proof when App Lock is enabled.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>DueProof lets you choose proof photos to store locally on this device.</string>
 	<key>UIBackgroundModes</key>
