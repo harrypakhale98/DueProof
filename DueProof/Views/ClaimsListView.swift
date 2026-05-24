@@ -206,6 +206,8 @@ struct ClaimsListView: View {
             filter = .all
             searchText = query
             path = []
+        case .sharedImport:
+            path = []
         }
     }
 

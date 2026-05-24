@@ -19,13 +19,14 @@ enum ProofItemType: String, Codable, CaseIterable, Identifiable, Hashable {
 
 @Model
 final class ProofItem {
-    @Attribute(.unique) var id: UUID
-    var type: ProofItemType
+    var id: UUID = UUID()
+    var type: ProofItemType = ProofItemType.photo
     var localFileName: String?
-    var displayName: String
+    @Attribute(.externalStorage) var syncedFileData: Data?
+    var displayName: String = ""
     var extractedText: String?
     var intelligenceData: Data?
-    var createdAt: Date
+    var createdAt: Date = Date()
     var claim: Claim?
 
     var intelligence: ProofIntelligence? {
@@ -51,6 +52,7 @@ final class ProofItem {
         id: UUID = UUID(),
         type: ProofItemType = .photo,
         localFileName: String? = nil,
+        syncedFileData: Data? = nil,
         displayName: String,
         extractedText: String? = nil,
         intelligence: ProofIntelligence? = nil,
@@ -60,6 +62,8 @@ final class ProofItem {
         self.id = id
         self.type = type
         self.localFileName = localFileName
+        self.syncedFileData = syncedFileData
+            ?? (SyncConfiguration.isICloudSyncEnabled ? FileStorageService.shared.data(for: localFileName) : nil)
         self.displayName = displayName
         self.extractedText = extractedText
         self.intelligenceData = nil

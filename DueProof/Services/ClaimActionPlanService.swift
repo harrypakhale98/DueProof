@@ -20,9 +20,9 @@ final class ClaimActionPlanService {
 
     func plan(for claim: Claim) -> ClaimActionPlan {
         let deadlineText = DateHelpers.deadlineText(for: claim.deadline)
-        let proofText = claim.proofItems.isEmpty
+        let proofText = claim.proofItemsList.isEmpty
             ? "Attach at least one receipt, document, screenshot, or note before contacting support."
-            : "\(claim.proofItems.count) proof item\(claim.proofItems.count == 1 ? "" : "s") attached."
+            : "\(claim.proofItemsList.count) proof item\(claim.proofItemsList.count == 1 ? "" : "s") attached."
 
         return ClaimActionPlan(
             headline: headline(for: claim),
@@ -74,7 +74,7 @@ final class ClaimActionPlanService {
             return "Act before \(deadlineText). \(proofText)"
         }
 
-        if claim.proofItems.isEmpty {
+        if claim.proofItemsList.isEmpty {
             return "Attach proof before the deadline. \(claim.title) has \(claim.displayValue) at risk."
         }
 
@@ -84,7 +84,7 @@ final class ClaimActionPlanService {
     private func checklist(for claim: Claim, proofText: String) -> [String] {
         var items = baseChecklist(for: claim.category)
 
-        if claim.proofItems.isEmpty {
+        if claim.proofItemsList.isEmpty {
             items.insert("Attach proof before sending the claim.", at: 0)
         } else {
             items.insert(proofText, at: 0)
@@ -171,7 +171,7 @@ final class ClaimActionPlanService {
 
     private func messageBody(for claim: Claim, deadlineText: String) -> String {
         let merchantLine = claim.merchant.map { "Provider: \($0)\n" } ?? ""
-        let proofLine = claim.proofItems.isEmpty
+        let proofLine = claim.proofItemsList.isEmpty
             ? "I can provide proof of purchase or supporting documents if needed."
             : "I have attached the relevant proof for review."
 

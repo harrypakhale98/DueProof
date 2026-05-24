@@ -216,8 +216,8 @@ struct ClaimCardView: View {
     private var proofReminderLine: some View {
         HStack(spacing: 8) {
             FactLabel(
-                text: claim.proofItems.isEmpty ? "No proof" : "Proof",
-                systemImage: claim.proofItems.isEmpty ? "paperclip" : "paperclip.circle.fill"
+                text: claim.proofItemsList.isEmpty ? "No proof" : "Proof",
+                systemImage: claim.proofItemsList.isEmpty ? "paperclip" : "paperclip.circle.fill"
             )
 
             if claim.reminderDate != nil {
@@ -262,7 +262,7 @@ struct ClaimCardView: View {
             "\(claim.displayValue) at risk",
             claim.urgencyLabel,
             "Status \(claim.statusDisplayName)",
-            claim.proofItems.isEmpty ? "No proof attached" : "Proof attached"
+            claim.proofItemsList.isEmpty ? "No proof attached" : "Proof attached"
         ]
 
         if claim.reminderDate != nil {

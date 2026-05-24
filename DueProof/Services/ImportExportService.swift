@@ -275,7 +275,7 @@ final class ImportExportService {
                 reminderDate: claim.reminderDate,
                 notes: claim.notes,
                 status: claim.status,
-                proofItems: claim.proofItems.map {
+                proofItems: claim.proofItemsList.map {
                     ProofItemRecord(
                         id: $0.id,
                         type: $0.type,
@@ -284,7 +284,7 @@ final class ImportExportService {
                         extractedText: $0.extractedText,
                         intelligence: $0.intelligence,
                         createdAt: $0.createdAt,
-                        binaryProofData: FileStorageService.shared.data(for: $0.localFileName)
+                        binaryProofData: FileStorageService.shared.data(for: $0)
                     )
                 },
                 createdAt: claim.createdAt,
@@ -364,13 +364,14 @@ final class ImportExportService {
                     id: proofRecord.id,
                     type: proofRecord.type,
                     localFileName: localFileName,
+                    syncedFileData: proofRecord.binaryProofData,
                     displayName: Self.trim(proofRecord.displayName, limit: 120),
                     extractedText: Self.optionalTrim(proofRecord.extractedText, limit: 12_000),
                     intelligence: proofRecord.intelligence,
                     createdAt: proofRecord.createdAt,
                     claim: claim
                 )
-                claim.proofItems.append(proof)
+                claim.proofItemsList.append(proof)
             }
 
             context.insert(claim)

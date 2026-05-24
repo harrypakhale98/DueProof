@@ -64,10 +64,14 @@ struct DueProofApp: App {
         FileStorageService.shared.protectLocalDataDirectory(applicationSupportDirectory)
 
         let storeURL = applicationSupportDirectory.appendingPathComponent("default.store")
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = SyncConfiguration.isICloudSyncEnabled
+            ? .private(DueProofShared.cloudKitContainerIdentifier)
+            : .none
+
         let configuration = ModelConfiguration(
             schema: schema,
             url: storeURL,
-            cloudKitDatabase: .none
+            cloudKitDatabase: cloudKitDatabase
         )
 
         let container = try ModelContainer(for: schema, configurations: [configuration])
@@ -77,14 +81,21 @@ struct DueProofApp: App {
 
     private static func makeInMemoryModelContainer() throws -> ModelContainer {
         let schema = Schema([Claim.self, ProofItem.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 }
 
 private struct RootTabView: View {
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var route: AppRoute
     @Query(sort: \Claim.updatedAt, order: .reverse) private var claims: [Claim]
+    @State private var sharedImportMessage: String?
+    @State private var sharedImportError: String?
 
     var body: some View {
         TabView(selection: $route.selectedTab) {
@@ -107,8 +118,26 @@ private struct RootTabView: View {
                 .tag(AppTab.settings)
         }
         .task(id: spotlightSignature) {
+            backfillProofFilesForSyncIfNeeded()
             SpotlightIndexService.shared.reindex(claims: claims)
+            ClaimSnapshotService.shared.publish(claims: claims)
         }
+        .task {
+            await importPendingSharedRequests()
+        }
+        .onChange(of: route.request) { _, request in
+            guard case let .sharedImport(id) = request?.destination else { return }
+            Task { await importSharedRequest(id: id) }
+        }
+        .alert("DueProof", isPresented: Binding(get: { sharedImportAlertMessage != nil }, set: { if !$0 { clearSharedImportMessages() } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(sharedImportAlertMessage ?? "")
+        }
+    }
+
+    private var sharedImportAlertMessage: String? {
+        sharedImportError ?? sharedImportMessage
     }
 
     private var spotlightSignature: String {
@@ -117,10 +146,50 @@ private struct RootTabView: View {
                 [
                     claim.id.uuidString,
                     "\(claim.updatedAt.timeIntervalSince1970)",
-                    "\(claim.proofItems.count)",
+                    "\(claim.proofItemsList.count)",
                     claim.status.rawValue
                 ].joined(separator: ":")
             }
             .joined(separator: "|")
+    }
+
+    private func backfillProofFilesForSyncIfNeeded() {
+        guard SyncConfiguration.isICloudSyncEnabled else { return }
+        let proofs = claims.flatMap(\.proofItemsList)
+        guard FileStorageService.shared.backfillSyncedFileData(for: proofs) > 0 else { return }
+        try? modelContext.save()
+    }
+
+    private func importPendingSharedRequests() async {
+        do {
+            let count = try await SharedImportService.shared.importPendingRequests(into: modelContext)
+            if count > 0 {
+                sharedImportMessage = count == 1 ? "Imported 1 shared item." : "Imported \(count) shared items."
+            }
+        } catch {
+            sharedImportError = error.localizedDescription
+        }
+    }
+
+    private func importSharedRequest(id: UUID?) async {
+        do {
+            let count: Int
+            if let id {
+                count = try await SharedImportService.shared.importRequest(id: id, into: modelContext)
+            } else {
+                count = try await SharedImportService.shared.importPendingRequests(into: modelContext)
+            }
+
+            if count > 0 {
+                sharedImportMessage = count == 1 ? "Imported 1 shared item." : "Imported \(count) shared items."
+            }
+        } catch {
+            sharedImportError = error.localizedDescription
+        }
+    }
+
+    private func clearSharedImportMessages() {
+        sharedImportMessage = nil
+        sharedImportError = nil
     }
 }

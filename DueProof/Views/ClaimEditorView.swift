@@ -365,7 +365,7 @@ struct ClaimEditorView: View {
                     claim: targetClaim
                 )
                 modelContext.insert(proof)
-                targetClaim.proofItems.append(proof)
+                targetClaim.proofItemsList.append(proof)
                 targetClaim.touch()
             }
 

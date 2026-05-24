@@ -42,4 +42,23 @@ final class FileStorageServiceTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: url), data)
         XCTAssertTrue(FileStorageService.shared.deleteFile(named: fileName))
     }
+
+    func testSyncedProofDataRestoresMissingLocalFile() throws {
+        let data = Data("Cloud mirrored proof".utf8)
+        let fileName = try FileStorageService.shared.saveDocumentData(data, originalFileName: "warranty.pdf")
+        let proof = ProofItem(
+            type: .document,
+            localFileName: fileName,
+            syncedFileData: data,
+            displayName: "Warranty"
+        )
+
+        XCTAssertTrue(FileStorageService.shared.deleteFile(named: fileName))
+        XCTAssertFalse(FileStorageService.shared.fileExists(named: fileName))
+
+        XCTAssertEqual(FileStorageService.shared.data(for: proof), data)
+        XCTAssertTrue(FileStorageService.shared.fileExists(named: fileName))
+
+        XCTAssertTrue(FileStorageService.shared.deleteFile(named: fileName))
+    }
 }

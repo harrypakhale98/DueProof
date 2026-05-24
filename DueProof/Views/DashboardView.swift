@@ -315,7 +315,7 @@ struct DashboardView: View {
             return "Beat this deadline"
         }
 
-        if claim.proofItems.isEmpty {
+        if claim.proofItemsList.isEmpty {
             return "Attach proof"
         }
 
@@ -330,7 +330,7 @@ struct DashboardView: View {
         let value = claim.displayValue
         let deadline = DateHelpers.deadlineText(for: claim.deadline)
 
-        if claim.proofItems.isEmpty {
+        if claim.proofItemsList.isEmpty {
             return "\(claim.title) has \(value) at risk and no proof attached."
         }
 
@@ -344,7 +344,7 @@ struct DashboardView: View {
     private func nextActionIcon(for claim: Claim) -> String {
         if claim.isOverdue { return "clock.badge.exclamationmark.fill" }
         if claim.isUrgent { return "exclamationmark.circle.fill" }
-        if claim.proofItems.isEmpty { return "paperclip.badge.plus" }
+        if claim.proofItemsList.isEmpty { return "paperclip.badge.plus" }
         if claim.deadline == nil { return "calendar.badge.plus" }
         return "checkmark.seal.fill"
     }
@@ -352,7 +352,7 @@ struct DashboardView: View {
     private func nextActionTint(for claim: Claim) -> Color {
         if claim.isOverdue { return .red }
         if claim.isUrgent { return .orange }
-        if claim.proofItems.isEmpty { return AppTheme.brandTint }
+        if claim.proofItemsList.isEmpty { return AppTheme.brandTint }
         if claim.deadline == nil { return .purple }
         return .green
     }

@@ -5,7 +5,11 @@ import SwiftData
 enum PreviewSampleData {
     static func container() -> ModelContainer {
         let schema = Schema([Claim.self, ProofItem.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         let context = container.mainContext
 

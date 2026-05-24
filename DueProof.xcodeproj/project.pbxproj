@@ -51,6 +51,10 @@
 		10000000000000000000002A /* ProofPacketExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002B /* ProofPacketExportService.swift */; };
 		10000000000000000000002B /* ClaimReportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002C /* ClaimReportExportService.swift */; };
 		10000000000000000000002C /* DueProofShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000002D /* DueProofShortcuts.swift */; };
+		10000000000000000000002D /* DueProofShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000030 /* DueProofShared.swift */; };
+		10000000000000000000002E /* ClaimSnapshotService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000031 /* ClaimSnapshotService.swift */; };
+		10000000000000000000002F /* SharedImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000032 /* SharedImportService.swift */; };
+		100000000000000000000030 /* SyncConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000033 /* SyncConfiguration.swift */; };
 		110000000000000000000001 /* ClaimLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000001 /* ClaimLogicTests.swift */; };
 		110000000000000000000002 /* DashboardMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000002 /* DashboardMetricsTests.swift */; };
 		110000000000000000000003 /* ExportImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000003 /* ExportImportTests.swift */; };
@@ -59,6 +63,13 @@
 		110000000000000000000006 /* ClaimDraftSmartFillTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000007 /* ClaimDraftSmartFillTests.swift */; };
 		110000000000000000000007 /* ProofIntelligenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000008 /* ProofIntelligenceTests.swift */; };
 		110000000000000000000008 /* ClaimActionExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000009 /* ClaimActionExportTests.swift */; };
+		120000000000000000000001 /* DueProofWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000002 /* DueProofWidgetBundle.swift */; };
+		120000000000000000000002 /* DueProofWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* DueProofWidget.swift */; };
+		120000000000000000000003 /* DueProofShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000030 /* DueProofShared.swift */; };
+		120000000000000000000004 /* DueProofWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* DueProofWidget.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		130000000000000000000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 230000000000000000000002 /* ShareViewController.swift */; };
+		130000000000000000000002 /* DueProofShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000030 /* DueProofShared.swift */; };
+		130000000000000000000003 /* DueProofShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 230000000000000000000001 /* DueProofShareExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,7 +80,36 @@
 			remoteGlobalIDString = 500000000000000000000001;
 			remoteInfo = DueProof;
 		};
+		530000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 540000000000000000000001;
+			remoteInfo = DueProofWidget;
+		};
+		530000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 550000000000000000000001;
+			remoteInfo = DueProofShareExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		700000000000000000000003 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				120000000000000000000004 /* DueProofWidget.appex in Embed App Extensions */,
+				130000000000000000000003 /* DueProofShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		200000000000000000000001 /* DueProofApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofApp.swift; sourceTree = "<group>"; };
@@ -118,6 +158,11 @@
 		20000000000000000000002C /* ClaimReportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimReportExportService.swift; sourceTree = "<group>"; };
 		20000000000000000000002D /* DueProofShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShortcuts.swift; sourceTree = "<group>"; };
 		20000000000000000000002E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		20000000000000000000002F /* DueProof.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DueProof.entitlements; sourceTree = "<group>"; };
+		200000000000000000000030 /* DueProofShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShared.swift; sourceTree = "<group>"; };
+		200000000000000000000031 /* ClaimSnapshotService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimSnapshotService.swift; sourceTree = "<group>"; };
+		200000000000000000000032 /* SharedImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedImportService.swift; sourceTree = "<group>"; };
+		200000000000000000000033 /* SyncConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncConfiguration.swift; sourceTree = "<group>"; };
 		210000000000000000000001 /* ClaimLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimLogicTests.swift; sourceTree = "<group>"; };
 		210000000000000000000002 /* DashboardMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetricsTests.swift; sourceTree = "<group>"; };
 		210000000000000000000003 /* ExportImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportImportTests.swift; sourceTree = "<group>"; };
@@ -127,6 +172,15 @@
 		210000000000000000000007 /* ClaimDraftSmartFillTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimDraftSmartFillTests.swift; sourceTree = "<group>"; };
 		210000000000000000000008 /* ProofIntelligenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofIntelligenceTests.swift; sourceTree = "<group>"; };
 		210000000000000000000009 /* ClaimActionExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimActionExportTests.swift; sourceTree = "<group>"; };
+		220000000000000000000001 /* DueProofWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DueProofWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		220000000000000000000002 /* DueProofWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofWidgetBundle.swift; sourceTree = "<group>"; };
+		220000000000000000000003 /* DueProofWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofWidget.swift; sourceTree = "<group>"; };
+		220000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		220000000000000000000005 /* DueProofWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DueProofWidget.entitlements; sourceTree = "<group>"; };
+		230000000000000000000001 /* DueProofShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DueProofShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		230000000000000000000002 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		230000000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		230000000000000000000004 /* DueProofShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DueProofShareExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +198,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		320000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		330000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -151,6 +219,8 @@
 			isa = PBXGroup;
 			children = (
 				400000000000000000000002 /* DueProof */,
+				420000000000000000000001 /* DueProofWidget */,
+				430000000000000000000001 /* DueProofShareExtension */,
 				410000000000000000000001 /* DueProofTests */,
 				400000000000000000000008 /* Products */,
 			);
@@ -164,6 +234,7 @@
 				400000000000000000000004 /* Views */,
 				400000000000000000000005 /* Services */,
 				400000000000000000000006 /* Utilities */,
+				400000000000000000000009 /* Shared */,
 				400000000000000000000007 /* Resources */,
 			);
 			path = DueProof;
@@ -211,6 +282,8 @@
 				200000000000000000000012 /* CalendarExportService.swift */,
 				200000000000000000000013 /* ImportExportService.swift */,
 				20000000000000000000002C /* ClaimReportExportService.swift */,
+				200000000000000000000031 /* ClaimSnapshotService.swift */,
+				200000000000000000000032 /* SharedImportService.swift */,
 				20000000000000000000001E /* OCRService.swift */,
 				20000000000000000000001F /* IntelligenceAvailabilityService.swift */,
 				200000000000000000000020 /* OnDeviceIntelligenceService.swift */,
@@ -231,6 +304,7 @@
 				200000000000000000000015 /* DateHelpers.swift */,
 				200000000000000000000016 /* AppTheme.swift */,
 				200000000000000000000028 /* AppRoute.swift */,
+				200000000000000000000033 /* SyncConfiguration.swift */,
 				20000000000000000000001A /* DashboardMetrics.swift */,
 				200000000000000000000027 /* ClaimSearchIntent.swift */,
 				20000000000000000000002D /* DueProofShortcuts.swift */,
@@ -243,6 +317,7 @@
 			isa = PBXGroup;
 			children = (
 				20000000000000000000002E /* Info.plist */,
+				20000000000000000000002F /* DueProof.entitlements */,
 				200000000000000000000018 /* Assets.xcassets */,
 			);
 			path = Resources;
@@ -252,9 +327,19 @@
 			isa = PBXGroup;
 			children = (
 				200000000000000000000019 /* DueProof.app */,
+				220000000000000000000001 /* DueProofWidget.appex */,
+				230000000000000000000001 /* DueProofShareExtension.appex */,
 				210000000000000000000006 /* DueProofTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		400000000000000000000009 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000030 /* DueProofShared.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		410000000000000000000001 /* DueProofTests */ = {
@@ -272,6 +357,27 @@
 			path = DueProofTests;
 			sourceTree = "<group>";
 		};
+		420000000000000000000001 /* DueProofWidget */ = {
+			isa = PBXGroup;
+			children = (
+				220000000000000000000002 /* DueProofWidgetBundle.swift */,
+				220000000000000000000003 /* DueProofWidget.swift */,
+				220000000000000000000004 /* Info.plist */,
+				220000000000000000000005 /* DueProofWidget.entitlements */,
+			);
+			path = DueProofWidget;
+			sourceTree = "<group>";
+		};
+		430000000000000000000001 /* DueProofShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				230000000000000000000002 /* ShareViewController.swift */,
+				230000000000000000000003 /* Info.plist */,
+				230000000000000000000004 /* DueProofShareExtension.entitlements */,
+			);
+			path = DueProofShareExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -282,10 +388,13 @@
 				700000000000000000000001 /* Sources */,
 				300000000000000000000001 /* Frameworks */,
 				700000000000000000000002 /* Resources */,
+				700000000000000000000003 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				520000000000000000000002 /* PBXTargetDependency */,
+				520000000000000000000003 /* PBXTargetDependency */,
 			);
 			name = DueProof;
 			productName = DueProof;
@@ -309,6 +418,40 @@
 			productReference = 210000000000000000000006 /* DueProofTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		540000000000000000000001 /* DueProofWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 920000000000000000000001 /* Build configuration list for PBXNativeTarget "DueProofWidget" */;
+			buildPhases = (
+				720000000000000000000001 /* Sources */,
+				320000000000000000000001 /* Frameworks */,
+				720000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DueProofWidget;
+			productName = DueProofWidget;
+			productReference = 220000000000000000000001 /* DueProofWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		550000000000000000000001 /* DueProofShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 930000000000000000000001 /* Build configuration list for PBXNativeTarget "DueProofShareExtension" */;
+			buildPhases = (
+				730000000000000000000001 /* Sources */,
+				330000000000000000000001 /* Frameworks */,
+				730000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DueProofShareExtension;
+			productName = DueProofShareExtension;
+			productReference = 230000000000000000000001 /* DueProofShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -326,6 +469,12 @@
 						CreatedOnToolsVersion = 26.5;
 						TestTargetID = 500000000000000000000001;
 					};
+					540000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					550000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+					};
 				};
 			};
 			buildConfigurationList = 900000000000000000000001 /* Build configuration list for PBXProject "DueProof" */;
@@ -342,6 +491,8 @@
 			projectRoot = "";
 			targets = (
 				500000000000000000000001 /* DueProof */,
+				540000000000000000000001 /* DueProofWidget */,
+				550000000000000000000001 /* DueProofShareExtension */,
 				510000000000000000000001 /* DueProofTests */,
 			);
 		};
@@ -353,6 +504,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				100000000000000000000018 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		720000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		730000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +571,10 @@
 				10000000000000000000002A /* ProofPacketExportService.swift in Sources */,
 				10000000000000000000002B /* ClaimReportExportService.swift in Sources */,
 				10000000000000000000002C /* DueProofShortcuts.swift in Sources */,
+				10000000000000000000002D /* DueProofShared.swift in Sources */,
+				10000000000000000000002E /* ClaimSnapshotService.swift in Sources */,
+				10000000000000000000002F /* SharedImportService.swift in Sources */,
+				100000000000000000000030 /* SyncConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,6 +593,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		720000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				120000000000000000000001 /* DueProofWidgetBundle.swift in Sources */,
+				120000000000000000000002 /* DueProofWidget.swift in Sources */,
+				120000000000000000000003 /* DueProofShared.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		730000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				130000000000000000000001 /* ShareViewController.swift in Sources */,
+				130000000000000000000002 /* DueProofShared.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -431,6 +619,16 @@
 			isa = PBXTargetDependency;
 			target = 500000000000000000000001 /* DueProof */;
 			targetProxy = 530000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		520000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 540000000000000000000001 /* DueProofWidget */;
+			targetProxy = 530000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		520000000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 550000000000000000000001 /* DueProofShareExtension */;
+			targetProxy = 530000000000000000000003 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -560,8 +758,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DueProof/Resources/DueProof.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProof/Resources/Info.plist;
@@ -594,8 +794,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DueProof/Resources/DueProof.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProof/Resources/Info.plist;
@@ -630,6 +832,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -655,6 +858,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -670,6 +874,128 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DueProof.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DueProof";
+			};
+			name = Release;
+		};
+		820000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = DueProofWidget/DueProofWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DueProofWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		820000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = DueProofWidget/DueProofWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DueProofWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		830000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = DueProofShareExtension/DueProofShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DueProofShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		830000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = DueProofShareExtension/DueProofShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DueProofShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.dueproof.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -699,6 +1025,24 @@
 			buildConfigurations = (
 				810000000000000000000001 /* Debug */,
 				810000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		920000000000000000000001 /* Build configuration list for PBXNativeTarget "DueProofWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				820000000000000000000001 /* Debug */,
+				820000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		930000000000000000000001 /* Build configuration list for PBXNativeTarget "DueProofShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				830000000000000000000001 /* Debug */,
+				830000000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -37,6 +37,10 @@
 	<string>DueProof lets you scan proof photos and stores them locally on this device.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>DueProof lets you choose proof photos to store locally on this device.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

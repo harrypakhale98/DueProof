@@ -3,19 +3,19 @@ import SwiftData
 
 @Model
 final class Claim {
-    @Attribute(.unique) var id: UUID
-    var title: String
-    var category: ClaimCategory
+    var id: UUID = UUID()
+    var title: String = ""
+    var category: ClaimCategory = ClaimCategory.other
     var merchant: String?
-    var valueAtRisk: Double
+    var valueAtRisk: Double = 0
     var deadline: Date?
     var reminderDate: Date?
-    var notes: String
-    var status: ClaimStatus
-    @Relationship(deleteRule: .cascade, inverse: \ProofItem.claim) var proofItems: [ProofItem]
-    var createdAt: Date
-    var updatedAt: Date
-    var recoveredValue: Double
+    var notes: String = ""
+    var status: ClaimStatus = ClaimStatus.active
+    @Relationship(deleteRule: .cascade, inverse: \ProofItem.claim) var proofItems: [ProofItem]?
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
+    var recoveredValue: Double = 0
     var completedAt: Date?
 
     init(
@@ -48,6 +48,11 @@ final class Claim {
         self.updatedAt = updatedAt
         self.recoveredValue = recoveredValue
         self.completedAt = completedAt
+    }
+
+    var proofItemsList: [ProofItem] {
+        get { proofItems ?? [] }
+        set { proofItems = newValue }
     }
 
     var isUrgent: Bool {

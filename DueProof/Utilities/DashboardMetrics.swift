@@ -39,7 +39,7 @@ struct DashboardMetrics {
             .count
 
         prooflessOpenCount = claims
-            .filter { $0.status.isOpen && $0.proofItems.isEmpty }
+            .filter { $0.status.isOpen && $0.proofItemsList.isEmpty }
             .count
 
         expiringSoonClaims = claims
@@ -85,7 +85,7 @@ struct DashboardMetrics {
             if days <= 30 { return 3 }
         }
 
-        if claim.proofItems.isEmpty { return 2 }
+        if claim.proofItemsList.isEmpty { return 2 }
         if claim.deadline == nil { return 4 }
         return 5
     }

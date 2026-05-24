@@ -44,10 +44,10 @@ final class ProofPacketExportService {
             }
 
             writer.addSection("Proof")
-            if claim.proofItems.isEmpty {
+            if claim.proofItemsList.isEmpty {
                 writer.addBody("No proof is attached to this claim yet.")
             } else {
-                for proof in claim.proofItems.sorted(by: { $0.createdAt < $1.createdAt }) {
+                for proof in claim.proofItemsList.sorted(by: { $0.createdAt < $1.createdAt }) {
                     writer.addProof(proof)
                 }
             }
@@ -133,8 +133,7 @@ private final class PDFPageWriter {
         }
 
         if proof.type == .photo,
-           let localFileName = proof.localFileName,
-           let image = FileStorageService.shared.thumbnail(for: localFileName, maxPixelSize: 900) {
+           let image = FileStorageService.shared.thumbnail(for: proof, maxPixelSize: 900) {
             addImage(image)
         }
     }

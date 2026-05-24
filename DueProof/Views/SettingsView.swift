@@ -14,12 +14,14 @@ struct SettingsView: View {
     @State private var notificationStatus = "Unknown"
     @State private var importResult: String?
     @State private var errorMessage: String?
+    @AppStorage(SyncConfiguration.iCloudSyncEnabledKey) private var iCloudSyncEnabled = false
 
     var body: some View {
         NavigationStack {
             Form {
                 privacySummarySection
                 dataSection
+                syncSection
                 notificationSection
                 aboutSection
             }
@@ -53,10 +55,10 @@ struct SettingsView: View {
                     .foregroundStyle(AppTheme.brandTint)
                     .accessibilityHidden(true)
 
-                Text("Your data stays on this device.")
+                Text(iCloudSyncEnabled ? "Your data syncs through your private iCloud." : "Your data stays on this device.")
                     .font(.headline)
 
-                Text("DueProof stores your data on this device. No account. No cloud backend. No analytics, ads, or tracking.")
+                Text(iCloudSyncEnabled ? "DueProof uses your private iCloud database when iCloud Sync is on. No DueProof account, ads, analytics, or tracking." : "DueProof stores your data on this device. No account. No cloud backend. No analytics, ads, or tracking.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -123,6 +125,21 @@ struct SettingsView: View {
             } label: {
                 Label("Refresh Status", systemImage: "arrow.clockwise")
             }
+        }
+    }
+
+    private var syncSection: some View {
+        Section {
+            Toggle(isOn: $iCloudSyncEnabled) {
+                Label("iCloud Sync", systemImage: "icloud")
+            }
+
+            LabeledContent("Container", value: DueProofShared.cloudKitContainerIdentifier)
+                .font(.footnote)
+        } header: {
+            Text("Sync")
+        } footer: {
+            Text("Sync uses your private iCloud database and applies on the next app launch. Proof files are mirrored for your devices when sync is on; complete exports remain available for offline archives.")
         }
     }
 
@@ -194,7 +211,7 @@ struct SettingsView: View {
     private func clearAllData() {
         do {
             let localFileNames = claims.flatMap { claim in
-                claim.proofItems.compactMap(\.localFileName)
+                claim.proofItemsList.compactMap(\.localFileName)
             }
 
             for claim in claims {
@@ -206,6 +223,7 @@ struct SettingsView: View {
             localFileNames.forEach { _ = FileStorageService.shared.deleteFile(named: $0) }
             try FileStorageService.shared.clearProofFiles()
             SpotlightIndexService.shared.deleteAll()
+            ClaimSnapshotService.shared.clear()
             exportURL = nil
             reportURL = nil
         } catch {
@@ -234,7 +252,7 @@ struct SettingsView: View {
 private struct PrivacyView: View {
     private let rows = [
         ("No account", "person.crop.circle.badge.xmark"),
-        ("No cloud backend", "cloud.slash"),
+        ("Optional private iCloud sync", "icloud"),
         ("No ads", "rectangle.slash"),
         ("No analytics", "chart.bar.xaxis"),
         ("No tracking", "location.slash"),
@@ -252,7 +270,7 @@ private struct PrivacyView: View {
                     Label(row.0, systemImage: row.1)
                 }
             } footer: {
-                Text("DueProof does not upload your data to our servers. Smart Fill uses on-device text recognition. When available, DueProof uses Apple's on-device intelligence to suggest claim details. Proof is not uploaded to DueProof servers, and you review suggestions before saving.")
+                Text("DueProof does not upload your data to DueProof servers. If you turn on iCloud Sync, claim data and proof files use your private iCloud database. Smart Fill uses on-device text recognition, and you review suggestions before saving.")
             }
         }
         .navigationTitle("Privacy")

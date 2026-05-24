@@ -15,7 +15,7 @@ struct ProofGalleryView: View {
     ]
 
     var body: some View {
-        let proofs = claim.proofItems.sorted { $0.createdAt > $1.createdAt }
+        let proofs = claim.proofItemsList.sorted { $0.createdAt > $1.createdAt }
 
         Group {
             if proofs.isEmpty {
@@ -75,8 +75,7 @@ struct ProofGalleryView: View {
             RoundedRectangle(cornerRadius: AppTheme.compactCornerRadius, style: .continuous)
                 .fill(.quaternary)
 
-            if let localFileName = proof.localFileName,
-               let image = FileStorageService.shared.thumbnail(for: localFileName) {
+            if let image = FileStorageService.shared.thumbnail(for: proof) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -165,8 +164,7 @@ private struct ProofPreviewView: View {
     var body: some View {
         NavigationStack {
             List {
-                if let localFileName = proof.localFileName,
-                   let image = FileStorageService.shared.image(for: localFileName) {
+                if let image = FileStorageService.shared.image(for: proof) {
                     Section("Proof") {
                         Image(uiImage: image)
                             .resizable()
@@ -176,7 +174,7 @@ private struct ProofPreviewView: View {
                             .accessibilityLabel(proof.displayName)
                     }
                 } else if proof.type == .document,
-                          FileStorageService.shared.fileExists(named: proof.localFileName) {
+                          FileStorageService.shared.fileExists(for: proof) {
                     Section("Proof") {
                         ContentUnavailableView(
                             "Document Ready",
@@ -208,8 +206,7 @@ private struct ProofPreviewView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    if let localFileName = proof.localFileName,
-                       let url = FileStorageService.shared.url(for: localFileName) {
+                    if let url = FileStorageService.shared.url(for: proof) {
                         ShareLink(item: url) {
                             Image(systemName: "square.and.arrow.up")
                         }

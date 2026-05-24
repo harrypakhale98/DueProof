@@ -369,7 +369,7 @@ struct ClaimDraftReviewView: View {
                     claim: claim
                 )
                 modelContext.insert(proof)
-                claim.proofItems.append(proof)
+                claim.proofItemsList.append(proof)
             }
 
             try modelContext.save()

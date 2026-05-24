@@ -86,9 +86,20 @@ final class FileStorageService {
         return directory.appendingPathComponent(localFileName)
     }
 
+    func url(for proof: ProofItem) -> URL? {
+        guard let localFileName = proof.localFileName else { return nil }
+        _ = restoreSyncedFileIfNeeded(for: proof)
+        return url(for: localFileName)
+    }
+
     func fileExists(named localFileName: String?) -> Bool {
         guard let localFileName, let url = url(for: localFileName) else { return false }
         return FileManager.default.fileExists(atPath: url.path)
+    }
+
+    func fileExists(for proof: ProofItem) -> Bool {
+        guard let localFileName = proof.localFileName else { return false }
+        return fileExists(named: localFileName) || restoreSyncedFileIfNeeded(for: proof)
     }
 
     func data(for localFileName: String?) -> Data? {
@@ -96,9 +107,28 @@ final class FileStorageService {
         return try? Data(contentsOf: url)
     }
 
+    func data(for proof: ProofItem) -> Data? {
+        if let localData = data(for: proof.localFileName) {
+            if proof.syncedFileData == nil {
+                proof.syncedFileData = localData
+            }
+            return localData
+        }
+
+        guard let syncedFileData = proof.syncedFileData else { return nil }
+        _ = restoreSyncedFileIfNeeded(for: proof)
+        return syncedFileData
+    }
+
     func image(for localFileName: String) -> UIImage? {
         guard let url = url(for: localFileName) else { return nil }
         return UIImage(contentsOfFile: url.path)
+    }
+
+    func image(for proof: ProofItem) -> UIImage? {
+        guard let localFileName = proof.localFileName else { return nil }
+        _ = restoreSyncedFileIfNeeded(for: proof)
+        return image(for: localFileName)
     }
 
     func thumbnail(for localFileName: String, maxPixelSize: CGFloat = 360) -> UIImage? {
@@ -117,6 +147,42 @@ final class FileStorageService {
         }
 
         return UIImage(cgImage: thumbnail)
+    }
+
+    func thumbnail(for proof: ProofItem, maxPixelSize: CGFloat = 360) -> UIImage? {
+        guard let localFileName = proof.localFileName else { return nil }
+        _ = restoreSyncedFileIfNeeded(for: proof)
+        return thumbnail(for: localFileName, maxPixelSize: maxPixelSize)
+    }
+
+    @discardableResult
+    func restoreSyncedFileIfNeeded(for proof: ProofItem) -> Bool {
+        guard let localFileName = proof.localFileName else { return false }
+        if fileExists(named: localFileName) { return true }
+        guard let syncedFileData = proof.syncedFileData,
+              let url = url(for: localFileName)
+        else {
+            return false
+        }
+
+        do {
+            try syncedFileData.write(to: url, options: [.atomic])
+            try protectFile(at: url)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    @discardableResult
+    func backfillSyncedFileData(for proofs: [ProofItem]) -> Int {
+        var updatedCount = 0
+        for proof in proofs where proof.syncedFileData == nil {
+            guard let data = data(for: proof.localFileName) else { continue }
+            proof.syncedFileData = data
+            updatedCount += 1
+        }
+        return updatedCount
     }
 
     @discardableResult

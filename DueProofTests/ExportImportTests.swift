@@ -90,7 +90,7 @@ final class ExportImportTests: XCTestCase {
 
         XCTAssertEqual(try ImportExportService.shared.importClaims(from: url, into: context), 1)
         let imported = try XCTUnwrap(context.fetch(FetchDescriptor<Claim>()).first)
-        XCTAssertTrue(imported.proofItems.isEmpty)
+        XCTAssertTrue(imported.proofItemsList.isEmpty)
     }
 
     func testCompleteExportCarriesProofImageDataAcrossContainers() throws {
@@ -134,7 +134,7 @@ final class ExportImportTests: XCTestCase {
             ),
             claim: claim
         )
-        claim.proofItems.append(proof)
+        claim.proofItemsList.append(proof)
 
         let exportURL = try ImportExportService.shared.exportClaims([claim])
         let decoder = JSONDecoder()
@@ -150,7 +150,7 @@ final class ExportImportTests: XCTestCase {
         XCTAssertEqual(try ImportExportService.shared.importClaims(from: exportURL, into: context), 1)
 
         let imported = try XCTUnwrap(context.fetch(FetchDescriptor<Claim>()).first)
-        let importedProof = try XCTUnwrap(imported.proofItems.first)
+        let importedProof = try XCTUnwrap(imported.proofItemsList.first)
         XCTAssertEqual(importedProof.extractedText, "Nike total 50 return by June 20")
         XCTAssertEqual(importedProof.intelligence?.summary, "Nike return proof is ready.")
         XCTAssertTrue(FileStorageService.shared.fileExists(named: importedProof.localFileName))
@@ -159,7 +159,11 @@ final class ExportImportTests: XCTestCase {
 
     private func makeContainer() throws -> ModelContainer {
         let schema = Schema([Claim.self, ProofItem.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 

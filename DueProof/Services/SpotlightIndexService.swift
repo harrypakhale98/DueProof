@@ -67,10 +67,10 @@ final class SpotlightIndexService {
             parts.insert(merchant, at: 1)
         }
 
-        if claim.proofItems.isEmpty {
+        if claim.proofItemsList.isEmpty {
             parts.append("Missing proof")
         } else {
-            parts.append("\(claim.proofItems.count) proof item\(claim.proofItems.count == 1 ? "" : "s")")
+            parts.append("\(claim.proofItemsList.count) proof item\(claim.proofItemsList.count == 1 ? "" : "s")")
         }
 
         return parts.joined(separator: " | ")
@@ -94,7 +94,7 @@ final class SpotlightIndexService {
             values.append(merchant)
         }
 
-        if claim.proofItems.isEmpty {
+        if claim.proofItemsList.isEmpty {
             values.append("missing proof")
         }
 
@@ -114,16 +114,15 @@ final class SpotlightIndexService {
             values.append(merchant)
         }
 
-        values.append(contentsOf: claim.proofItems.compactMap(\.extractedText))
+        values.append(contentsOf: claim.proofItemsList.compactMap(\.extractedText))
 
         return String(values.joined(separator: "\n").prefix(20_000))
     }
 
     private func thumbnailData(for claim: Claim) -> Data? {
-        for proof in claim.proofItems {
+        for proof in claim.proofItemsList {
             guard proof.type == .photo,
-                  let localFileName = proof.localFileName,
-                  let thumbnail = FileStorageService.shared.thumbnail(for: localFileName, maxPixelSize: 180)
+                  let thumbnail = FileStorageService.shared.thumbnail(for: proof, maxPixelSize: 180)
             else {
                 continue
             }

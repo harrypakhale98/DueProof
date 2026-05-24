@@ -98,7 +98,7 @@ final class ProofIntelligenceTests: XCTestCase {
             ),
             claim: claim
         )
-        claim.proofItems.append(proof)
+        claim.proofItemsList.append(proof)
 
         XCTAssertTrue(ClaimSearchIntent.parse("returns due this week nike").matches(claim, referenceDate: referenceDate))
         XCTAssertTrue(ClaimSearchIntent.parse("with proof over $100 ABCD-1234").matches(claim, referenceDate: referenceDate))

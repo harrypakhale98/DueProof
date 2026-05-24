@@ -396,7 +396,7 @@ struct ClaimDetailView: View {
                 claim: claim
             )
             modelContext.insert(proof)
-            claim.proofItems.append(proof)
+            claim.proofItemsList.append(proof)
             claim.touch()
             try modelContext.save()
         } catch {
@@ -476,7 +476,7 @@ struct ClaimDetailView: View {
                 claim: claim
             )
             modelContext.insert(proof)
-            claim.proofItems.append(proof)
+            claim.proofItemsList.append(proof)
             claim.touch()
             try modelContext.save()
         } catch {
@@ -485,7 +485,7 @@ struct ClaimDetailView: View {
     }
 
     private func deleteClaim() {
-        let localFileNames = claim.proofItems.compactMap(\.localFileName)
+        let localFileNames = claim.proofItemsList.compactMap(\.localFileName)
         NotificationService.shared.cancelReminder(for: claim)
         modelContext.delete(claim)
 

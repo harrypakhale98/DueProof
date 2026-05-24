@@ -64,11 +64,11 @@ struct ClaimSearchIntent: Equatable {
             return false
         }
 
-        if onlyMissingProof, !claim.proofItems.isEmpty {
+        if onlyMissingProof, !claim.proofItemsList.isEmpty {
             return false
         }
 
-        if onlyWithProof, claim.proofItems.isEmpty {
+        if onlyWithProof, claim.proofItemsList.isEmpty {
             return false
         }
 
@@ -117,7 +117,7 @@ struct ClaimSearchIntent: Equatable {
             claim.urgencyLabel
         ]
 
-        for proof in claim.proofItems {
+        for proof in claim.proofItemsList {
             parts.append(proof.displayName)
             parts.append(proof.extractedText ?? "")
 

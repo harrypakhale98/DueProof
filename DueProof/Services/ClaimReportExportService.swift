@@ -45,7 +45,7 @@ final class ClaimReportExportService {
             CurrencyFormatter.editingString(claim.recoveredValue),
             claim.deadline.map(DateHelpers.fullDate) ?? "",
             claim.reminderDate.map(DateHelpers.fullDate) ?? "",
-            "\(claim.proofItems.count)",
+            "\(claim.proofItemsList.count)",
             DateHelpers.fullDate(claim.createdAt),
             DateHelpers.fullDate(claim.updatedAt),
             claim.notes

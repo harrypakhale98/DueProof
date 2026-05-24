@@ -10,6 +10,7 @@ enum AppRouteDestination: Equatable {
     case claim(UUID)
     case addClaim(ClaimCategory)
     case search(String)
+    case sharedImport(UUID?)
 }
 
 struct AppRouteRequest: Identifiable, Equatable {
@@ -38,6 +39,11 @@ final class AppRoute: ObservableObject {
         request = AppRouteRequest(destination: .search(trimmed))
     }
 
+    func importSharedRequest(id: UUID?) {
+        selectedTab = .claims
+        request = AppRouteRequest(destination: .sharedImport(id))
+    }
+
     func handle(_ url: URL) {
         guard url.scheme == "dueproof" else { return }
 
@@ -60,6 +66,9 @@ final class AppRoute: ObservableObject {
                 .first(where: { $0.name == "q" })?
                 .value ?? ""
             search(query)
+        case "import-shared":
+            let rawID = url.pathComponents.dropFirst().first
+            importSharedRequest(id: rawID.flatMap(UUID.init(uuidString:)))
         default:
             selectedTab = .dashboard
         }
