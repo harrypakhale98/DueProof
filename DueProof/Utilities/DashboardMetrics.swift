@@ -13,17 +13,15 @@ struct DashboardMetrics {
     init(claims: [Claim], referenceDate: Date = Date()) {
         moneyAtRisk = claims
             .filter(\.countsTowardMoneyAtRisk)
-            .reduce(0) { $0 + $1.valueAtRisk }
+            .reduce(0) { $0 + CurrencyFormatter.sanitizedAmount($1.valueAtRisk) }
 
         recoveredValue = claims
             .filter { $0.status == .recovered }
-            .reduce(0) { $0 + $1.recoveredValue }
+            .reduce(0) { $0 + CurrencyFormatter.sanitizedAmount($1.recoveredValue) }
 
         urgentCount = claims
             .filter { claim in
-                guard claim.status.isOpen, let deadline = claim.deadline else { return false }
-                let days = DateHelpers.daysUntil(deadline, from: referenceDate)
-                return days >= 0 && days <= 7
+                claim.hasUrgentDeadline(relativeTo: referenceDate)
             }
             .count
 
@@ -33,8 +31,7 @@ struct DashboardMetrics {
 
         overdueCount = claims
             .filter { claim in
-                guard claim.status.isOpen, let deadline = claim.deadline else { return false }
-                return DateHelpers.daysUntil(deadline, from: referenceDate) < 0
+                claim.hasOverdueDeadline(relativeTo: referenceDate)
             }
             .count
 
@@ -68,7 +65,7 @@ struct DashboardMetrics {
                 let rhsDeadline = rhs.deadline ?? .distantFuture
                 if lhsDeadline != rhsDeadline { return lhsDeadline < rhsDeadline }
 
-                return lhs.valueAtRisk > rhs.valueAtRisk
+                return CurrencyFormatter.sanitizedAmount(lhs.valueAtRisk) > CurrencyFormatter.sanitizedAmount(rhs.valueAtRisk)
             }
             .first
     }

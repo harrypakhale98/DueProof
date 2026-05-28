@@ -5,8 +5,9 @@ import SwiftUI
 
 @main
 struct DueProofApp: App {
-    private let modelContainer: ModelContainer
+    private let modelContainer: ModelContainer?
     private let launchWarning: String?
+    private let launchError: String?
     @State private var isShowingLaunchWarning: Bool
     @StateObject private var route = AppRoute()
 
@@ -16,13 +17,18 @@ struct DueProofApp: App {
 
         do {
             modelContainer = try Self.makeModelContainer()
+            SyncConfiguration.markLaunchConfigurationApplied()
             launchWarning = nil
+            launchError = nil
         } catch {
             do {
                 modelContainer = try Self.makeInMemoryModelContainer()
                 launchWarning = "DueProof opened with temporary storage because the local store could not be prepared. Export any visible data before closing the app."
+                launchError = nil
             } catch {
-                fatalError("Unable to create any DueProof SwiftData store: \(error)")
+                modelContainer = nil
+                launchWarning = nil
+                launchError = "DueProof could not prepare local storage. Restart your iPhone and try again before adding new proof."
             }
         }
 
@@ -31,25 +37,29 @@ struct DueProofApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppLockGate {
-                RootTabView()
-                    .environmentObject(route)
-                    .tint(AppTheme.brandTint)
-                    .alert("Storage Needs Attention", isPresented: $isShowingLaunchWarning) {
-                        Button("OK", role: .cancel) {}
-                    } message: {
-                        Text(launchWarning ?? "")
-                    }
-                    .onOpenURL { url in
-                        route.handle(url)
-                    }
-                    .onContinueUserActivity(CSSearchableItemActionType) { activity in
-                        guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
-                        route.handleSpotlightIdentifier(identifier)
-                    }
+            if let modelContainer {
+                AppLockGate {
+                    RootTabView()
+                        .environmentObject(route)
+                        .tint(AppTheme.brandTint)
+                        .alert("Storage Needs Attention", isPresented: $isShowingLaunchWarning) {
+                            Button("OK", role: .cancel) {}
+                        } message: {
+                            Text(launchWarning ?? "")
+                        }
+                        .onOpenURL { url in
+                            route.handle(url)
+                        }
+                        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                            guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
+                            route.handleSpotlightIdentifier(identifier)
+                        }
+                }
+                .modelContainer(modelContainer)
+            } else {
+                StorageUnavailableView(message: launchError ?? "DueProof could not prepare local storage.")
             }
         }
-        .modelContainer(modelContainer)
     }
 
     private static func makeModelContainer() throws -> ModelContainer {
@@ -91,6 +101,19 @@ struct DueProofApp: App {
             cloudKitDatabase: .none
         )
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+}
+
+private struct StorageUnavailableView: View {
+    let message: String
+
+    var body: some View {
+        ContentUnavailableView {
+            Label("Storage Unavailable", systemImage: "externaldrive.badge.exclamationmark")
+        } description: {
+            Text(message)
+        }
+        .tint(AppTheme.brandTint)
     }
 }
 
@@ -143,6 +166,7 @@ private struct AppLockGate<Content: View>: View {
         .onChange(of: scenePhase) { _, phase in
             guard isAppLockEnabled else { return }
             if phase == .active {
+                isUnlocked = false
                 Task { await authenticate() }
             } else {
                 isUnlocked = false
@@ -189,6 +213,10 @@ private struct AppLockGate<Content: View>: View {
             isUnlocked = true
             return
         }
+        guard scenePhase == .active else {
+            isUnlocked = false
+            return
+        }
 
         let context = LAContext()
         context.localizedCancelTitle = "Cancel"
@@ -206,8 +234,9 @@ private struct AppLockGate<Content: View>: View {
                 .deviceOwnerAuthentication,
                 localizedReason: "Unlock DueProof to view private claims and proof."
             )
-            isUnlocked = didUnlock
-            authenticationMessage = didUnlock ? nil : "DueProof is locked."
+            let shouldAcceptUnlock = didUnlock && isAppLockEnabled && scenePhase == .active
+            isUnlocked = shouldAcceptUnlock
+            authenticationMessage = shouldAcceptUnlock ? nil : "DueProof is locked."
         } catch {
             authenticationMessage = "DueProof is locked."
             isUnlocked = false
@@ -219,6 +248,8 @@ private struct RootTabView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var route: AppRoute
     @Query(sort: \Claim.updatedAt, order: .reverse) private var claims: [Claim]
+    @AppStorage(AppLockSettings.isEnabledKey, store: AppLockSettings.defaults) private var appLockEnabled = false
+    @AppStorage(DueProofPrivacySettings.spotlightSearchEnabledKey, store: DueProofPrivacySettings.defaults) private var spotlightSearchEnabled = false
     @State private var sharedImportMessage: String?
     @State private var sharedImportError: String?
 
@@ -242,10 +273,10 @@ private struct RootTabView: View {
                 }
                 .tag(AppTab.settings)
         }
-        .task(id: spotlightSignature) {
+        .task(id: privateSurfaceSignature) {
+            normalizeClaimsForStorageIfNeeded()
             backfillProofFilesForSyncIfNeeded()
-            SpotlightIndexService.shared.reindex(claims: claims)
-            ClaimSnapshotService.shared.publish(claims: claims)
+            publishPrivateSurfaces()
         }
         .task {
             await importPendingSharedRequests()
@@ -272,17 +303,75 @@ private struct RootTabView: View {
                     claim.id.uuidString,
                     "\(claim.updatedAt.timeIntervalSince1970)",
                     "\(claim.proofItemsList.count)",
-                    claim.status.rawValue
+                    claim.status.rawValue,
+                    proofSignature(for: claim)
                 ].joined(separator: ":")
             }
             .joined(separator: "|")
+    }
+
+    private func proofSignature(for claim: Claim) -> String {
+        claim.proofItemsList
+            .map { proof in
+                let displayName = ClaimTextLimits.required(proof.displayName, limit: ProofItemTextLimits.displayName)
+                let localFileName = ClaimTextLimits.required(proof.localFileName ?? "", limit: 160)
+                let extractedText = ClaimTextLimits.required(proof.extractedText ?? "", limit: ProofItemTextLimits.extractedText)
+                let primaryIdentifier = ClaimTextLimits.optional(proof.intelligence?.primaryIdentifier, limit: ClaimTextLimits.reference) ?? ""
+
+                return [
+                    proof.id.uuidString,
+                    displayName,
+                    localFileName,
+                    "\(extractedText.hashValue)",
+                    "\(proof.intelligenceData?.count ?? 0)",
+                    primaryIdentifier
+                ].joined(separator: ":")
+            }
+            .joined(separator: ",")
+    }
+
+    private var privateSurfaceSignature: String {
+        "\(spotlightSignature)|appLock:\(appLockEnabled)|spotlight:\(spotlightSearchEnabled)"
+    }
+
+    private func publishPrivateSurfaces() {
+        if spotlightSearchEnabled && !appLockEnabled {
+            SpotlightIndexService.shared.reindex(claims: claims)
+        } else {
+            SpotlightIndexService.shared.deleteAll()
+        }
+
+        if appLockEnabled {
+            ClaimSnapshotService.shared.clear()
+        } else {
+            ClaimSnapshotService.shared.publish(claims: claims)
+        }
+    }
+
+    private func normalizeClaimsForStorageIfNeeded() {
+        var didNormalize = false
+        for claim in claims {
+            didNormalize = claim.normalizeStoredFields() || didNormalize
+        }
+        guard didNormalize else { return }
+
+        do {
+            try modelContext.save()
+        } catch {
+            sharedImportError = "DueProof could not finish repairing saved claim data: \(error.localizedDescription)"
+        }
     }
 
     private func backfillProofFilesForSyncIfNeeded() {
         guard SyncConfiguration.isICloudSyncEnabled else { return }
         let proofs = claims.flatMap(\.proofItemsList)
         guard FileStorageService.shared.backfillSyncedFileData(for: proofs) > 0 else { return }
-        try? modelContext.save()
+
+        do {
+            try modelContext.save()
+        } catch {
+            sharedImportError = "DueProof could not finish preparing proof files for iCloud Sync: \(error.localizedDescription)"
+        }
     }
 
     private func importPendingSharedRequests() async {

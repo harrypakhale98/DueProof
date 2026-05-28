@@ -1,6 +1,5 @@
 import Foundation
 import SwiftData
-import UIKit
 
 enum SharedImportError: LocalizedError {
     case requestNotFound
@@ -26,7 +25,11 @@ final class SharedImportService {
     func importPendingRequests(into context: ModelContext) async throws -> Int {
         var count = 0
         for request in SharedImportQueueStore.shared.loadPendingRequests() {
-            count += try await importRequest(request, into: context)
+            do {
+                count += try await importRequest(request, into: context)
+            } catch SharedImportError.emptyRequest {
+                continue
+            }
         }
         return count
     }
@@ -45,14 +48,16 @@ final class SharedImportService {
             throw SharedImportError.emptyRequest
         }
 
+        var localFileNamesCreatedByImport: [String] = []
+        var proofItemsCreatedByImport: [ProofItem] = []
         let claim = Claim(
-            title: normalizedTitle(for: request),
+            title: Self.normalizedTitle(for: request),
             category: inferredCategory(for: request),
             merchant: nil,
             valueAtRisk: 0,
             deadline: nil,
             reminderDate: nil,
-            notes: notes(for: request),
+            notes: Self.notes(for: request),
             status: .active,
             createdAt: request.createdAt,
             updatedAt: Date()
@@ -60,6 +65,10 @@ final class SharedImportService {
 
         for item in request.items {
             if let proof = await makeProofItem(from: item, requestID: request.id, claim: claim) {
+                if let localFileName = proof.localFileName {
+                    localFileNamesCreatedByImport.append(localFileName)
+                }
+                proofItemsCreatedByImport.append(proof)
                 context.insert(proof)
                 claim.proofItemsList.append(proof)
             }
@@ -71,54 +80,76 @@ final class SharedImportService {
         }
 
         context.insert(claim)
-        try context.save()
-        SharedImportQueueStore.shared.delete(id: request.id)
-        return 1
+        do {
+            try context.save()
+            SharedImportQueueStore.shared.delete(id: request.id)
+            return 1
+        } catch {
+            rollbackFailedImport(
+                claim: claim,
+                proofItems: proofItemsCreatedByImport,
+                localFileNames: localFileNamesCreatedByImport,
+                context: context
+            )
+            try? context.save()
+            throw error
+        }
     }
 
-    private func normalizedTitle(for request: SharedImportRequest) -> String {
-        let title = request.suggestedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !title.isEmpty {
-            return String(title.prefix(160))
+    static func normalizedTitle(for request: SharedImportRequest) -> String {
+        if let title = normalizedTitleText(request.suggestedTitle, limit: ClaimTextLimits.title, stripsPathComponent: true) {
+            return title
         }
 
         for item in request.items {
-            if let originalFileName = item.originalFileName?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !originalFileName.isEmpty {
-                return String((originalFileName as NSString).deletingPathExtension.prefix(160))
+            if let originalFileName = item.originalFileName {
+                let lastComponent = (originalFileName as NSString).lastPathComponent
+                let baseName = (lastComponent as NSString).deletingPathExtension
+                if let fileTitle = normalizedTitleText(baseName, limit: ClaimTextLimits.title, stripsPathComponent: true) {
+                    return fileTitle
+                }
             }
 
-            if let text = item.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !text.isEmpty {
-                return String(text.prefix(80))
+            if let textTitle = normalizedTitleText(item.text, limit: 80, stripsPathComponent: false) {
+                return textTitle
             }
         }
 
         return "Shared Proof"
     }
 
+    private static func normalizedTitleText(_ value: String?, limit: Int, stripsPathComponent: Bool) -> String? {
+        let source = stripsPathComponent ? ((value ?? "") as NSString).lastPathComponent : (value ?? "")
+        let trimmed = source.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return String(trimmed.prefix(max(1, limit)))
+    }
+
     private func inferredCategory(for request: SharedImportRequest) -> ClaimCategory {
         request.items.contains { $0.kind == .document || $0.kind == .image } ? .document : .other
     }
 
-    private func notes(for request: SharedImportRequest) -> String {
+    static func notes(for request: SharedImportRequest) -> String {
         var parts: [String] = []
 
-        if let sourceApplication = request.sourceApplication, !sourceApplication.isEmpty {
+        if let sourceApplication = ClaimTextLimits.optional(request.sourceApplication, limit: ClaimTextLimits.merchant) {
             parts.append("Shared from \(sourceApplication).")
         }
 
         for item in request.items {
-            if let text = item.text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+            switch item.kind {
+            case .text:
+                guard let text = ClaimTextLimits.optional(item.text, limit: ClaimTextLimits.notes) else { continue }
                 parts.append(String(text.prefix(4_000)))
-            }
-
-            if let urlString = item.urlString?.trimmingCharacters(in: .whitespacesAndNewlines), !urlString.isEmpty {
+            case .url:
+                guard let urlString = Claim.normalizedActionURLString(item.urlString ?? item.text) else { continue }
                 parts.append(urlString)
+            case .image, .document:
+                continue
             }
         }
 
-        return parts.joined(separator: "\n\n")
+        return ClaimTextLimits.required(parts.joined(separator: "\n\n"), limit: ClaimTextLimits.notes)
     }
 
     private func makeProofItem(
@@ -127,26 +158,34 @@ final class SharedImportService {
         claim: Claim
     ) async -> ProofItem? {
         switch item.kind {
-        case .text, .url:
-            guard let text = item.text ?? item.urlString else { return nil }
+        case .text:
+            guard let text = ClaimTextLimits.optional(item.text, limit: 12_000) else { return nil }
             return ProofItem(
                 type: .note,
-                displayName: item.kind == .url ? "Shared Link" : "Shared Text",
-                extractedText: String(text.prefix(12_000)),
+                displayName: "Shared Text",
+                extractedText: text,
+                claim: claim
+            )
+        case .url:
+            guard let urlString = Claim.normalizedActionURLString(item.urlString ?? item.text) else { return nil }
+            return ProofItem(
+                type: .note,
+                displayName: "Shared Link",
+                extractedText: urlString,
                 claim: claim
             )
         case .image, .document:
             guard let storedFileName = item.storedFileName,
                   let url = SharedImportQueueStore.shared.fileURL(for: requestID, storedFileName: storedFileName),
-                  let data = try? Data(contentsOf: url)
+                  let data = try? FileStorageService.shared.dataForImportedProof(at: url)
             else {
                 return nil
             }
 
             do {
-                if item.kind == .image, let image = UIImage(data: data) {
+                if item.kind == .image {
                     let fileName = try FileStorageService.shared.saveImageData(data, preferredName: item.originalFileName)
-                    let ocrResult = await OCRService.shared.recognizeText(in: image)
+                    let ocrResult = await OCRService.shared.recognizeText(inImageData: data)
                     let searchableText = ocrResult.searchableText
                     let extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
                     let intelligence = await ProofIntelligenceService.shared.analyze(
@@ -178,5 +217,19 @@ final class SharedImportService {
                 return nil
             }
         }
+    }
+
+    private func rollbackFailedImport(
+        claim: Claim,
+        proofItems: [ProofItem],
+        localFileNames: [String],
+        context: ModelContext
+    ) {
+        claim.proofItemsList.removeAll()
+        for proof in proofItems {
+            context.delete(proof)
+        }
+        context.delete(claim)
+        localFileNames.forEach { _ = FileStorageService.shared.deleteFile(named: $0) }
     }
 }

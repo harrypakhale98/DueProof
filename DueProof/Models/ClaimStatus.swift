@@ -12,6 +12,17 @@ enum ClaimStatus: String, Codable, CaseIterable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
+    static let editableCases: [ClaimStatus] = [.active, .recovered, .used, .expired, .ignored]
+
+    static func normalizedStoredStatus(_ status: ClaimStatus) -> ClaimStatus {
+        switch status {
+        case .urgent, .overdue:
+            return .active
+        case .active, .recovered, .used, .expired, .ignored:
+            return status
+        }
+    }
+
     var displayName: String {
         switch self {
         case .active: "Active"

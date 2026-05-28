@@ -6,11 +6,20 @@ import Vision
 
 final class OCRService {
     static let shared = OCRService()
+    static let maximumPreparedImagePixelSize = 2_400
+    private static let maximumSearchableTextCharacters = OCRResultLimits.text
 
     private init() {}
 
     func recognizeText(at imageURL: URL) async -> OCRResult {
-        guard imageURL.isFileURL, let image = UIImage(contentsOfFile: imageURL.path) else {
+        guard imageURL.isFileURL,
+              let data = try? DueProofBoundedFileReader.data(
+                at: imageURL,
+                maximumBytes: FileStorageService.maximumProofFileBytes,
+                tooLargeError: FileStorageError.proofFileTooLarge
+              ),
+              let image = preparedImage(from: data)
+        else {
             return OCRResult(warnings: ["DueProof could not read that local proof image."])
         }
 
@@ -80,6 +89,33 @@ final class OCRService {
         }.value
     }
 
+    func recognizeText(inImageData data: Data) async -> OCRResult {
+        guard let image = preparedImage(from: data) else {
+            return OCRResult(warnings: ["DueProof could not prepare that image for text recognition."])
+        }
+
+        return await recognizeText(in: image)
+    }
+
+    func preparedImage(from data: Data, maxPixelSize: Int = OCRService.maximumPreparedImagePixelSize) -> UIImage? {
+        guard maxPixelSize > 0 else { return nil }
+        let pixelSize = min(maxPixelSize, Self.maximumPreparedImagePixelSize)
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: pixelSize
+        ]
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage)
+    }
+
     private static func recognizedBarcodes(from observations: [VNBarcodeObservation]) -> [OCRResult.RecognizedBarcode] {
         var seenValues = Set<String>()
 
@@ -100,13 +136,35 @@ final class OCRService {
     }
 
     private func pdfText(at url: URL) -> String {
-        PDFDocument(url: url)?.string ?? ""
+        guard let data = try? DueProofBoundedFileReader.data(
+            at: url,
+            maximumBytes: FileStorageService.maximumProofFileBytes,
+            tooLargeError: FileStorageError.proofFileTooLarge
+        ),
+              let document = PDFDocument(data: data)
+        else {
+            return ""
+        }
+
+        var text = ""
+        for pageIndex in 0..<document.pageCount {
+            guard text.count < Self.maximumSearchableTextCharacters else { break }
+            guard let pageText = document.page(at: pageIndex)?.string else { continue }
+
+            if !text.isEmpty {
+                text.append("\n")
+            }
+            let remainingCharacters = Self.maximumSearchableTextCharacters - text.count
+            text.append(String(pageText.prefix(max(0, remainingCharacters))))
+        }
+
+        return text
     }
 
     private func normalizedSearchText(_ text: String) -> String? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        return String(trimmed.prefix(12_000))
+        return String(trimmed.prefix(Self.maximumSearchableTextCharacters))
     }
 }
 

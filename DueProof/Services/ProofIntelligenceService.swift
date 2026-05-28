@@ -136,14 +136,17 @@ final class ProofIntelligenceService {
     ) -> ProofIntelligence {
         let merchant = trimmed(intelligence.merchant) ?? fallback.merchant
         let category = intelligence.category ?? fallback.category
-        let value = validValue(intelligence.valueAtRisk) ?? fallback.valueAtRisk
-        let purchaseDate = intelligence.purchaseDate ?? fallback.purchaseDate
-        let deadline = intelligence.deadline ?? fallback.deadline
+        let fallbackValue = validValue(fallback.valueAtRisk)
+        let value = validValue(intelligence.valueAtRisk) ?? fallbackValue
+        let intelligencePurchaseDate = validDate(intelligence.purchaseDate)
+        let intelligenceDeadline = validDate(intelligence.deadline)
+        let purchaseDate = intelligencePurchaseDate ?? validDate(fallback.purchaseDate)
+        let deadline = intelligenceDeadline ?? validDate(fallback.deadline)
         let orderNumber = trimmed(intelligence.orderNumber) ?? fallback.orderNumber
         let serialNumber = trimmed(intelligence.serialNumber) ?? fallback.serialNumber
         let barcodeValues = Self.normalizedBarcodeValues(intelligence.barcodeValues + fallback.barcodeValues)
         let hasReadableText = !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let deadlineIsExplicit = intelligence.deadline == nil ? fallback.deadlineIsExplicit : intelligence.deadlineIsExplicit
+        let deadlineIsExplicit = intelligenceDeadline == nil ? fallback.deadlineIsExplicit : intelligence.deadlineIsExplicit
         let completeness = Self.completeness(
             merchant: merchant,
             value: value,
@@ -172,7 +175,7 @@ final class ProofIntelligenceService {
             orderNumber: orderNumber,
             serialNumber: serialNumber,
             barcodeValues: barcodeValues,
-            confidence: min(max(intelligence.confidence, fallback.confidence), 1),
+            confidence: Self.normalizedConfidence(intelligence.confidence, fallback: fallback.confidence),
             warnings: warnings,
             summary: summary,
             completeness: completeness
@@ -185,8 +188,25 @@ final class ProofIntelligenceService {
     }
 
     private func validValue(_ value: Double?) -> Double? {
-        guard let value, value >= 0 else { return nil }
+        guard let value,
+              value.isFinite,
+              value >= 0,
+              value <= CurrencyFormatter.maximumSupportedAmount
+        else {
+            return nil
+        }
         return value
+    }
+
+    private func validDate(_ value: Date?) -> Date? {
+        guard let value, value.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return value
+    }
+
+    private static func normalizedConfidence(_ value: Double, fallback: Double) -> Double {
+        let resolved = value.isFinite ? value : fallback
+        guard resolved.isFinite else { return 0 }
+        return min(max(resolved, 0), 1)
     }
 
     private static func explicitDeadline(from text: String) -> Date? {

@@ -4,41 +4,53 @@ enum DateHelpers {
     static let calendar = Calendar.autoupdatingCurrent
 
     static func daysUntil(_ date: Date, from referenceDate: Date = Date()) -> Int {
+        guard isFinite(date), isFinite(referenceDate) else { return Int.max }
         let start = calendar.startOfDay(for: referenceDate)
         let end = calendar.startOfDay(for: date)
         return calendar.dateComponents([.day], from: start, to: end).day ?? 0
     }
 
     static func isPastDeadline(_ date: Date, referenceDate: Date = Date()) -> Bool {
-        calendar.startOfDay(for: date) < calendar.startOfDay(for: referenceDate)
+        guard isFinite(date), isFinite(referenceDate) else { return false }
+        return calendar.startOfDay(for: date) < calendar.startOfDay(for: referenceDate)
     }
 
     static func shortDate(_ date: Date) -> String {
-        date.formatted(.dateTime.month(.abbreviated).day().year(.defaultDigits))
+        guard isFinite(date) else { return "Unknown date" }
+        return date.formatted(.dateTime.month(.abbreviated).day().year(.defaultDigits))
     }
 
     static func fullDate(_ date: Date) -> String {
-        date.formatted(.dateTime.weekday(.wide).month(.wide).day().year())
+        guard isFinite(date) else { return "Unknown date" }
+        return date.formatted(.dateTime.weekday(.wide).month(.wide).day().year())
+    }
+
+    static func fullDateTime(_ date: Date) -> String {
+        guard isFinite(date) else { return "Unknown date" }
+        return date.formatted(.dateTime.weekday(.wide).month(.wide).day().year().hour().minute())
     }
 
     static func defaultDeadline(for category: ClaimCategory, referenceDate: Date = Date()) -> Date? {
+        let referenceDate = validDate(referenceDate) ?? Date()
         switch category {
         case .returnItem, .reimbursement, .rebate:
-            calendar.date(byAdding: .day, value: 30, to: referenceDate)
+            return calendar.date(byAdding: .day, value: 30, to: referenceDate)
         case .giftCard:
-            nil
+            return nil
         case .warranty:
-            calendar.date(byAdding: .year, value: 1, to: referenceDate)
+            return calendar.date(byAdding: .year, value: 1, to: referenceDate)
         case .subscription:
-            calendar.date(byAdding: .day, value: 1, to: referenceDate)
+            return calendar.date(byAdding: .day, value: 1, to: referenceDate)
         case .renewal:
-            calendar.date(byAdding: .day, value: 7, to: referenceDate)
+            return calendar.date(byAdding: .day, value: 7, to: referenceDate)
         case .document, .other:
-            calendar.date(byAdding: .day, value: 30, to: referenceDate)
+            return calendar.date(byAdding: .day, value: 30, to: referenceDate)
         }
     }
 
     static func defaultReminderDate(for category: ClaimCategory, deadline: Date?, referenceDate: Date = Date()) -> Date? {
+        let deadline = validDate(deadline)
+        let referenceDate = validDate(referenceDate) ?? Date()
         switch category {
         case .giftCard:
             return calendar.date(byAdding: .day, value: 30, to: referenceDate)
@@ -59,6 +71,7 @@ enum DateHelpers {
 
     static func deadlineText(for date: Date?) -> String {
         guard let date else { return "No deadline" }
+        guard isFinite(date) else { return "Invalid deadline" }
         let days = daysUntil(date)
         if days < 0 {
             let overdueDays = abs(days)
@@ -70,6 +83,7 @@ enum DateHelpers {
     }
 
     private static func boundedReminder(before deadline: Date?, days: Int, referenceDate: Date) -> Date? {
+        let deadline = validDate(deadline)
         let fallback = calendar.date(byAdding: .day, value: max(days, 1), to: referenceDate)
 
         guard let deadline else { return fallback }
@@ -87,5 +101,14 @@ enum DateHelpers {
         }
 
         return deadline > oneHourFromNow ? oneHourFromNow : nil
+    }
+
+    private static func validDate(_ date: Date?) -> Date? {
+        guard let date, isFinite(date) else { return nil }
+        return date
+    }
+
+    private static func isFinite(_ date: Date) -> Bool {
+        date.timeIntervalSinceReferenceDate.isFinite
     }
 }

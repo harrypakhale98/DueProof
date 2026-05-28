@@ -7,12 +7,20 @@
 - [ ] No DueProof-operated backend or remote push dependency.
 - [ ] No DueProof account system.
 - [ ] Optional private iCloud sync verified on/off after relaunch.
+- [ ] Spotlight search is off by default, opt-in only, and cleared while App Lock is enabled.
 - [ ] No ads, analytics, tracking, telemetry, or crash-reporting SDK.
 - [ ] SwiftData persistence verified after relaunch.
 - [ ] Proof photo add/remove/delete behavior verified.
+- [ ] Oversized proof photo/PDF imports are rejected without stale local files.
+- [ ] Large proof photos are downsampled before storage and OCR.
+- [ ] Share-extension photo/PDF imports use bounded file intake and reject oversized files without empty queued imports.
+- [ ] Pasted/imported action links and money values are bounded and reject invalid or non-finite input.
 - [ ] Local notification scheduling, rescheduling, and cancellation verified.
 - [ ] JSON export/import verified.
-- [ ] Calendar export verified.
+- [ ] Share-extension photo/PDF import verified, including failed-import cleanup.
+- [ ] Malformed deep links do not trigger broad shared-import or oversized search state.
+- [ ] CSV report export verified, including formula-style cell neutralization.
+- [ ] Calendar export verified, including long escaped Unicode titles importing as one event.
 
 ## Product Quality
 
@@ -21,7 +29,10 @@
 - [ ] Claims list search/filter/sort verified.
 - [ ] Add/Edit form validation verified.
 - [ ] Claim detail actions verified.
+- [ ] Failed edit/status/proof saves do not leave visible unsaved in-memory changes.
 - [ ] All destructive actions confirmed.
+- [ ] Clear All Data removes claims, proof files, reminders, generated export files, Spotlight entries, widget snapshots, and pending share-extension imports.
+- [ ] Widget shows locked/empty state when App Lock is enabled, even if stale shared snapshots exist.
 - [ ] Light mode reviewed.
 - [ ] Dark mode reviewed.
 - [ ] Large Dynamic Type reviewed.

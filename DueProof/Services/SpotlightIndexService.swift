@@ -1,17 +1,26 @@
 @preconcurrency import CoreSpotlight
 import Foundation
+import OSLog
 import UniformTypeIdentifiers
 
 final class SpotlightIndexService {
     static let shared = SpotlightIndexService()
     static let claimIdentifierPrefix = "claim:"
 
+    private static let logger = Logger(subsystem: "com.hardik.dueproof", category: "Spotlight")
     private let domainIdentifier = "com.hardik.dueproof.claims"
 
     private init() {}
 
     @MainActor
     func reindex(claims: [Claim]) {
+        guard DueProofPrivacySettings.isSpotlightSearchEnabled,
+              !DueProofPrivacySettings.isAppLockEnabled
+        else {
+            deleteAll()
+            return
+        }
+
         let items = claims.map(searchableItem)
 
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domainIdentifier]) { _ in
@@ -19,7 +28,7 @@ final class SpotlightIndexService {
 
             CSSearchableIndex.default().indexSearchableItems(items) { error in
                 if let error {
-                    print("DueProof Spotlight indexing failed: \(error.localizedDescription)")
+                    Self.logger.error("Spotlight indexing failed: \(error.localizedDescription, privacy: .private)")
                 }
             }
         }
@@ -116,16 +125,29 @@ final class SpotlightIndexService {
             claim.statusDisplayName,
             claim.urgencyLabel,
             claim.notes,
-            claim.referenceNumber ?? "",
+            claim.primaryReference ?? "",
             claim.policySummary,
-            claim.actionURLString ?? ""
+            claim.actionURL?.absoluteString ?? ""
         ]
 
         if let merchant = claim.merchant {
             values.append(merchant)
         }
 
-        values.append(contentsOf: claim.proofItemsList.compactMap(\.extractedText))
+        for proof in claim.proofItemsList {
+            values.append(proof.displayName)
+            values.append(proof.extractedText ?? "")
+
+            if let intelligence = proof.intelligence {
+                values.append(intelligence.summary)
+                values.append(intelligence.merchant ?? "")
+                values.append(intelligence.orderNumber ?? "")
+                values.append(intelligence.serialNumber ?? "")
+                values.append(contentsOf: intelligence.barcodeValues)
+                values.append(intelligence.deadlineLabel)
+                values.append(contentsOf: intelligence.warnings)
+            }
+        }
 
         return String(values.joined(separator: "\n").prefix(20_000))
     }

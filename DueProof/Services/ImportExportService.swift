@@ -32,11 +32,24 @@ struct ClaimExportBundle: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        exportedAt = try container.decodeIfPresent(Date.self, forKey: .exportedAt) ?? Date()
+        exportedAt = Self.decodeDate(from: container, forKey: .exportedAt) ?? Date()
         appName = try container.decodeIfPresent(String.self, forKey: .appName) ?? "DueProof"
         schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
         includesBinaryProofData = try container.decodeIfPresent(Bool.self, forKey: .includesBinaryProofData) ?? false
         claims = try container.decodeIfPresent([ClaimRecord].self, forKey: .claims) ?? []
+    }
+
+    private static func decodeDate(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) -> Date? {
+        do {
+            return normalizedDate(try container.decodeIfPresent(Date.self, forKey: key))
+        } catch {
+            return nil
+        }
+    }
+
+    private static func normalizedDate(_ value: Date?) -> Date? {
+        guard let value, value.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return value
     }
 }
 
@@ -126,19 +139,19 @@ struct ClaimRecord: Codable {
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         category = Self.decodeCategory(from: container) ?? .other
         merchant = try container.decodeIfPresent(String.self, forKey: .merchant)
-        valueAtRisk = max(0, try container.decodeIfPresent(Double.self, forKey: .valueAtRisk) ?? 0)
-        deadline = try container.decodeIfPresent(Date.self, forKey: .deadline)
-        reminderDate = try container.decodeIfPresent(Date.self, forKey: .reminderDate)
+        valueAtRisk = Self.nonNegativeFinite(try container.decodeIfPresent(Double.self, forKey: .valueAtRisk) ?? 0)
+        deadline = Self.decodeDate(from: container, forKey: .deadline)
+        reminderDate = Self.decodeDate(from: container, forKey: .reminderDate)
         referenceNumber = try container.decodeIfPresent(String.self, forKey: .referenceNumber)
         policySummary = try container.decodeIfPresent(String.self, forKey: .policySummary) ?? ""
         actionURLString = try container.decodeIfPresent(String.self, forKey: .actionURLString)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         status = Self.decodeStatus(from: container) ?? .active
         proofItems = try container.decodeIfPresent([ProofItemRecord].self, forKey: .proofItems) ?? []
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? now
-        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? createdAt
-        recoveredValue = max(0, try container.decodeIfPresent(Double.self, forKey: .recoveredValue) ?? 0)
-        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
+        createdAt = Self.decodeDate(from: container, forKey: .createdAt) ?? now
+        updatedAt = Self.decodeDate(from: container, forKey: .updatedAt) ?? createdAt
+        recoveredValue = Self.nonNegativeFinite(try container.decodeIfPresent(Double.self, forKey: .recoveredValue) ?? 0)
+        completedAt = Self.decodeDate(from: container, forKey: .completedAt)
     }
 
     var isImportable: Bool {
@@ -167,6 +180,23 @@ struct ClaimRecord: Codable {
         }
 
         return ClaimStatus(rawValue: rawValue)
+    }
+
+    private static func nonNegativeFinite(_ value: Double) -> Double {
+        CurrencyFormatter.sanitizedAmount(value)
+    }
+
+    private static func decodeDate(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) -> Date? {
+        do {
+            return normalizedDate(try container.decodeIfPresent(Date.self, forKey: key))
+        } catch {
+            return nil
+        }
+    }
+
+    private static func normalizedDate(_ value: Date?) -> Date? {
+        guard let value, value.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return value
     }
 }
 
@@ -219,7 +249,7 @@ struct ProofItemRecord: Codable {
         displayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? type.displayName
         extractedText = try container.decodeIfPresent(String.self, forKey: .extractedText)
         intelligence = try container.decodeIfPresent(ProofIntelligence.self, forKey: .intelligence)
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        createdAt = Self.decodeDate(from: container, forKey: .createdAt) ?? Date()
         binaryProofData = try container.decodeIfPresent(Data.self, forKey: .binaryProofData)
     }
 
@@ -234,6 +264,24 @@ struct ProofItemRecord: Codable {
 
         return ProofItemType(rawValue: rawValue)
     }
+
+    private static func decodeDate(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) -> Date? {
+        do {
+            return normalizedDate(try container.decodeIfPresent(Date.self, forKey: key))
+        } catch {
+            return nil
+        }
+    }
+
+    private static func normalizedDate(_ value: Date?) -> Date? {
+        guard let value, value.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return value
+    }
+}
+
+struct ImportClaimsResult: Equatable {
+    var insertedCount: Int
+    var insertedClaimIDs: [UUID]
 }
 
 enum ImportExportError: LocalizedError {
@@ -279,38 +327,7 @@ final class ImportExportService {
     private init() {}
 
     func exportClaims(_ claims: [Claim]) throws -> URL {
-        let records = claims.map { claim in
-            ClaimRecord(
-                id: claim.id,
-                title: claim.title,
-                category: claim.category,
-                merchant: claim.merchant,
-                valueAtRisk: claim.valueAtRisk,
-                deadline: claim.deadline,
-                reminderDate: claim.reminderDate,
-                referenceNumber: claim.referenceNumber,
-                policySummary: claim.policySummary,
-                actionURLString: claim.actionURLString,
-                notes: claim.notes,
-                status: claim.status,
-                proofItems: claim.proofItemsList.map {
-                    ProofItemRecord(
-                        id: $0.id,
-                        type: $0.type,
-                        localFileName: $0.localFileName,
-                        displayName: $0.displayName,
-                        extractedText: $0.extractedText,
-                        intelligence: $0.intelligence,
-                        createdAt: $0.createdAt,
-                        binaryProofData: FileStorageService.shared.data(for: $0)
-                    )
-                },
-                createdAt: claim.createdAt,
-                updatedAt: claim.updatedAt,
-                recoveredValue: claim.recoveredValue,
-                completedAt: claim.completedAt
-            )
-        }
+        let records = claims.map(exportRecord)
 
         let bundle = ClaimExportBundle(
             exportedAt: Date(),
@@ -327,17 +344,68 @@ final class ImportExportService {
         )
     }
 
+    private func exportRecord(for claim: Claim) -> ClaimRecord {
+        let valueAtRisk = CurrencyFormatter.sanitizedAmount(claim.valueAtRisk)
+        let status = ClaimStatus.normalizedStoredStatus(claim.status)
+        let deadline = Self.normalizedDate(claim.deadline)
+        let createdAt = Self.normalizedDate(claim.createdAt) ?? Date()
+        let updatedAt = Self.normalizedDate(claim.updatedAt) ?? createdAt
+        let completionFields = Self.normalizedCompletionFields(
+            status: status,
+            valueAtRisk: valueAtRisk,
+            recoveredValue: claim.recoveredValue,
+            completedAt: claim.completedAt,
+            fallbackCompletionDate: updatedAt
+        )
+
+        return ClaimRecord(
+            id: claim.id,
+            title: Self.requiredText(claim.title, limit: ClaimTextLimits.title, fallback: "Untitled claim"),
+            category: claim.category,
+            merchant: ClaimTextLimits.optional(claim.merchant, limit: ClaimTextLimits.merchant),
+            valueAtRisk: valueAtRisk,
+            deadline: deadline,
+            reminderDate: Self.normalizedReminderDate(claim.reminderDate, deadline: deadline, status: status),
+            referenceNumber: ClaimTextLimits.optional(claim.referenceNumber, limit: ClaimTextLimits.reference),
+            policySummary: ClaimTextLimits.required(claim.policySummary, limit: ClaimTextLimits.policySummary),
+            actionURLString: Claim.normalizedActionURLString(claim.actionURLString),
+            notes: ClaimTextLimits.required(claim.notes, limit: ClaimTextLimits.notes),
+            status: status,
+            proofItems: claim.proofItemsList.map(exportProofRecord),
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            recoveredValue: completionFields.recoveredValue,
+            completedAt: completionFields.completedAt
+        )
+    }
+
+    private func exportProofRecord(for proof: ProofItem) -> ProofItemRecord {
+        let localFileName = FileStorageService.shared.isValidLocalFileName(proof.localFileName) ? proof.localFileName : nil
+
+        return ProofItemRecord(
+            id: proof.id,
+            type: proof.type,
+            localFileName: localFileName,
+            displayName: Self.requiredText(proof.displayName, limit: ProofItemTextLimits.displayName, fallback: proof.type.displayName),
+            extractedText: ClaimTextLimits.optional(proof.extractedText, limit: ProofItemTextLimits.extractedText),
+            intelligence: proof.intelligence?.normalizedForStorage(),
+            createdAt: Self.normalizedDate(proof.createdAt) ?? Date(),
+            binaryProofData: FileStorageService.shared.data(for: proof)
+        )
+    }
+
     @discardableResult
     func importClaims(from url: URL, into context: ModelContext) throws -> Int {
-        if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
-           size > maximumImportBytes {
-            throw ImportExportError.importFileTooLarge
-        }
+        try importClaimsWithResult(from: url, into: context).insertedCount
+    }
 
-        let data = try Data(contentsOf: url)
-        guard data.count <= maximumImportBytes else {
-            throw ImportExportError.importFileTooLarge
-        }
+    @discardableResult
+    func importClaimsWithResult(from url: URL, into context: ModelContext) throws -> ImportClaimsResult {
+        let data = try DueProofBoundedFileReader.data(
+            at: url,
+            maximumBytes: maximumImportBytes,
+            tooLargeError: ImportExportError.importFileTooLarge
+        )
 
         let bundle = try decoder.decode(ClaimExportBundle.self, from: data)
         guard bundle.schemaVersion == 1 else {
@@ -352,56 +420,85 @@ final class ImportExportService {
 
         var existingIDs = Set(try context.fetch(FetchDescriptor<Claim>()).map(\.id))
         var insertedCount = 0
+        var insertedClaimIDs: [UUID] = []
+        var insertedClaims: [Claim] = []
         var importedProofIDs = Set<UUID>()
+        var localFileNamesCreatedByImport: [String] = []
 
-        for record in bundle.claims {
-            guard record.isImportable, !existingIDs.contains(record.id) else { continue }
+        do {
+            for record in bundle.claims {
+                guard record.isImportable, !existingIDs.contains(record.id) else { continue }
 
-            let claim = Claim(
-                id: record.id,
-                title: Self.trim(record.title, limit: 160),
-                category: record.category,
-                merchant: Self.optionalTrim(record.merchant, limit: 120),
-                valueAtRisk: record.valueAtRisk,
-                deadline: record.deadline,
-                reminderDate: record.reminderDate,
-                referenceNumber: Self.optionalTrim(record.referenceNumber, limit: 120),
-                policySummary: Self.trim(record.policySummary, limit: 1_500),
-                actionURLString: Self.optionalTrim(record.actionURLString, limit: 500),
-                notes: Self.trim(record.notes, limit: 4_000),
-                status: record.status,
-                createdAt: record.createdAt,
-                updatedAt: record.updatedAt,
-                recoveredValue: record.recoveredValue,
-                completedAt: record.completedAt
-            )
-
-            for proofRecord in record.proofItems where shouldImportProofItem(proofRecord) {
-                guard !importedProofIDs.contains(proofRecord.id) else { continue }
-                importedProofIDs.insert(proofRecord.id)
-
-                let localFileName = try importedLocalFileName(for: proofRecord)
-                let proof = ProofItem(
-                    id: proofRecord.id,
-                    type: proofRecord.type,
-                    localFileName: localFileName,
-                    syncedFileData: proofRecord.binaryProofData,
-                    displayName: Self.trim(proofRecord.displayName, limit: 120),
-                    extractedText: Self.optionalTrim(proofRecord.extractedText, limit: 12_000),
-                    intelligence: proofRecord.intelligence,
-                    createdAt: proofRecord.createdAt,
-                    claim: claim
+                let importedStatus = ClaimStatus.normalizedStoredStatus(record.status)
+                let completionFields = Self.normalizedCompletionFields(
+                    status: importedStatus,
+                    valueAtRisk: record.valueAtRisk,
+                    recoveredValue: record.recoveredValue,
+                    completedAt: record.completedAt,
+                    fallbackCompletionDate: record.updatedAt
                 )
-                claim.proofItemsList.append(proof)
+                let claim = Claim(
+                    id: record.id,
+                    title: ClaimTextLimits.required(record.title, limit: ClaimTextLimits.title),
+                    category: record.category,
+                    merchant: ClaimTextLimits.optional(record.merchant, limit: ClaimTextLimits.merchant),
+                    valueAtRisk: record.valueAtRisk,
+                    deadline: record.deadline,
+                    reminderDate: Self.normalizedReminderDate(
+                        record.reminderDate,
+                        deadline: record.deadline,
+                        status: importedStatus
+                    ),
+                    referenceNumber: ClaimTextLimits.optional(record.referenceNumber, limit: ClaimTextLimits.reference),
+                    policySummary: ClaimTextLimits.required(record.policySummary, limit: ClaimTextLimits.policySummary),
+                    actionURLString: Claim.normalizedActionURLString(record.actionURLString),
+                    notes: ClaimTextLimits.required(record.notes, limit: ClaimTextLimits.notes),
+                    status: importedStatus,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt,
+                    recoveredValue: completionFields.recoveredValue,
+                    completedAt: completionFields.completedAt
+                )
+
+                for proofRecord in record.proofItems where shouldImportProofItem(proofRecord) {
+                    guard !importedProofIDs.contains(proofRecord.id) else { continue }
+                    importedProofIDs.insert(proofRecord.id)
+
+                    let localFileName = try importedLocalFileName(for: proofRecord)
+                    if proofRecord.binaryProofData != nil, let localFileName {
+                        localFileNamesCreatedByImport.append(localFileName)
+                    }
+                    let proof = ProofItem(
+                        id: proofRecord.id,
+                        type: proofRecord.type,
+                        localFileName: localFileName,
+                        syncedFileData: proofRecord.binaryProofData,
+                        displayName: Self.trim(proofRecord.displayName, limit: 120),
+                        extractedText: Self.optionalTrim(proofRecord.extractedText, limit: 12_000),
+                        intelligence: proofRecord.intelligence,
+                        createdAt: proofRecord.createdAt,
+                        claim: claim
+                    )
+                    claim.proofItemsList.append(proof)
+                }
+
+                context.insert(claim)
+                insertedClaims.append(claim)
+                existingIDs.insert(record.id)
+                insertedCount += 1
+                insertedClaimIDs.append(record.id)
             }
 
-            context.insert(claim)
-            existingIDs.insert(record.id)
-            insertedCount += 1
+            try context.save()
+            return ImportClaimsResult(insertedCount: insertedCount, insertedClaimIDs: insertedClaimIDs)
+        } catch {
+            for claim in insertedClaims {
+                context.delete(claim)
+            }
+            localFileNamesCreatedByImport.forEach { _ = FileStorageService.shared.deleteFile(named: $0) }
+            try? context.save()
+            throw error
         }
-
-        try context.save()
-        return insertedCount
     }
 
     private func shouldImportProofItem(_ proofRecord: ProofItemRecord) -> Bool {
@@ -428,10 +525,58 @@ final class ImportExportService {
         return FileStorageService.shared.isValidLocalFileName(localFileName) ? localFileName : nil
     }
 
+    private static func normalizedCompletionFields(
+        status: ClaimStatus,
+        valueAtRisk: Double,
+        recoveredValue: Double,
+        completedAt: Date?,
+        fallbackCompletionDate: Date
+    ) -> (recoveredValue: Double, completedAt: Date?) {
+        let fallbackCompletionDate = normalizedDate(fallbackCompletionDate) ?? Date()
+        let completedAt = normalizedDate(completedAt)
+        let valueAtRisk = CurrencyFormatter.sanitizedAmount(valueAtRisk)
+        let recoveredValue = CurrencyFormatter.sanitizedAmount(recoveredValue)
+
+        switch status {
+        case .recovered:
+            let resolvedRecoveredValue = recoveredValue > 0 ? min(recoveredValue, valueAtRisk) : valueAtRisk
+            return (max(0, resolvedRecoveredValue), completedAt ?? fallbackCompletionDate)
+        case .used, .expired, .ignored:
+            return (0, completedAt ?? fallbackCompletionDate)
+        case .active, .urgent, .overdue:
+            return (0, nil)
+        }
+    }
+
+    private static func normalizedReminderDate(_ reminderDate: Date?, deadline: Date?, status: ClaimStatus) -> Date? {
+        guard status.isOpen,
+              let reminderDate = normalizedDate(reminderDate),
+              reminderDate > Date()
+        else {
+            return nil
+        }
+
+        if let deadline = normalizedDate(deadline), reminderDate > deadline {
+            return nil
+        }
+
+        return reminderDate
+    }
+
+    private static func normalizedDate(_ value: Date?) -> Date? {
+        guard let value, value.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return value
+    }
+
     private static func timestamp() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
         return formatter.string(from: Date())
+    }
+
+    private static func requiredText(_ value: String, limit: Int, fallback: String) -> String {
+        let trimmed = trim(value, limit: limit)
+        return trimmed.isEmpty ? fallback : trimmed
     }
 
     private static func trim(_ value: String, limit: Int) -> String {

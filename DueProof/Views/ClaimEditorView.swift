@@ -48,22 +48,28 @@ struct ClaimEditorView: View {
         self.isEditing = claim != nil
 
         let resolvedCategory = claim?.category ?? initialCategory
-        let defaultDeadline = claim?.deadline ?? DateHelpers.defaultDeadline(for: resolvedCategory)
-        let defaultReminder = claim?.reminderDate ?? DateHelpers.defaultReminderDate(for: resolvedCategory, deadline: defaultDeadline)
+        let categoryDefaultDeadline = DateHelpers.defaultDeadline(for: resolvedCategory)
+        let resolvedDeadline = claim == nil ? categoryDefaultDeadline : claim?.deadline
+        let deadlinePickerDate = resolvedDeadline ?? categoryDefaultDeadline ?? Date()
+        let defaultReminder = DateHelpers.defaultReminderDate(
+            for: resolvedCategory,
+            deadline: deadlinePickerDate
+        )
+        let resolvedReminder = claim?.reminderDate ?? (claim == nil ? defaultReminder : nil)
 
         _title = State(initialValue: claim?.title ?? "")
         _category = State(initialValue: resolvedCategory)
         _merchant = State(initialValue: claim?.merchant ?? "")
         _valueText = State(initialValue: claim.map { CurrencyFormatter.editingString($0.valueAtRisk) } ?? "0")
-        _hasDeadline = State(initialValue: defaultDeadline != nil)
-        _deadline = State(initialValue: defaultDeadline ?? Date())
-        _status = State(initialValue: claim?.status ?? .active)
+        _hasDeadline = State(initialValue: resolvedDeadline != nil)
+        _deadline = State(initialValue: deadlinePickerDate)
+        _status = State(initialValue: ClaimStatus.normalizedStoredStatus(claim?.status ?? .active))
         _referenceNumber = State(initialValue: claim?.referenceNumber ?? "")
         _policySummary = State(initialValue: claim?.policySummary ?? "")
         _actionURLString = State(initialValue: claim?.actionURLString ?? "")
         _notes = State(initialValue: claim?.notes ?? "")
         _reminderEnabled = State(initialValue: claim == nil ? Self.defaultReminderEnabled(for: resolvedCategory) : claim?.reminderDate != nil)
-        _reminderDate = State(initialValue: defaultReminder ?? Date())
+        _reminderDate = State(initialValue: resolvedReminder ?? defaultReminder ?? Date().addingTimeInterval(60 * 60 * 24))
     }
 
     var body: some View {
@@ -128,7 +134,7 @@ struct ClaimEditorView: View {
                     }
 
                     Picker("Status", selection: $status) {
-                        ForEach(ClaimStatus.allCases) { status in
+                        ForEach(ClaimStatus.editableCases) { status in
                             Label(status.displayName, systemImage: status.symbolName)
                                 .tag(status)
                         }
@@ -285,6 +291,7 @@ struct ClaimEditorView: View {
     private var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && (parsedValue ?? -1) >= 0
+            && actionURLValidationMessage == nil
             && reminderValidationMessage == nil
     }
 
@@ -297,11 +304,23 @@ struct ClaimEditorView: View {
             return "Enter a valid value at risk."
         }
 
+        if let actionURLValidationMessage {
+            return actionURLValidationMessage
+        }
+
         if let reminderValidationMessage {
             return reminderValidationMessage
         }
 
         return nil
+    }
+
+    private var actionURLValidationMessage: String? {
+        let trimmed = actionURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return Claim.normalizedActionURLString(trimmed) == nil
+            ? "Enter a valid support link, email address link, or phone link."
+            : nil
     }
 
     private var reminderValidationMessage: String? {
@@ -349,12 +368,18 @@ struct ClaimEditorView: View {
 
         isSaving = true
         defer { isSaving = false }
+        let existingClaimSnapshot = claim.map(ClaimMutationSnapshot.init)
+        var createdLocalFileName: String?
+        var insertedClaim: Claim?
+        var createdProof: ProofItem?
 
         do {
-            let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            let normalizedMerchant = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
+            let normalizedTitle = ClaimTextLimits.required(title, limit: ClaimTextLimits.title)
+            let normalizedMerchant = ClaimTextLimits.required(merchant, limit: ClaimTextLimits.merchant)
+            let normalizedActionURL = Claim.normalizedActionURLString(actionURLString)
             let resolvedDeadline = hasDeadline ? deadline : nil
-            let resolvedReminder = reminderEnabled && status.isOpen ? reminderDate : nil
+            let resolvedStatus = ClaimStatus.normalizedStoredStatus(status)
+            let resolvedReminder = reminderEnabled && resolvedStatus.isOpen ? reminderDate : nil
             let targetClaim: Claim
 
             if let claim {
@@ -364,12 +389,13 @@ struct ClaimEditorView: View {
                 claim.valueAtRisk = value
                 claim.deadline = resolvedDeadline
                 claim.reminderDate = resolvedReminder
-                claim.referenceNumber = normalizedOptional(referenceNumber, limit: 120)
-                claim.policySummary = normalizedRequired(policySummary, limit: 1_500)
-                claim.actionURLString = normalizedOptional(actionURLString, limit: 500)
-                claim.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-                claim.status = status
+                claim.referenceNumber = ClaimTextLimits.optional(referenceNumber, limit: ClaimTextLimits.reference)
+                claim.policySummary = ClaimTextLimits.required(policySummary, limit: ClaimTextLimits.policySummary)
+                claim.actionURLString = normalizedActionURL
+                claim.notes = ClaimTextLimits.required(notes, limit: ClaimTextLimits.notes)
+                claim.status = resolvedStatus
                 applyCompletionState(to: claim)
+                claim.normalizeStoredFields()
                 claim.touch()
                 targetClaim = claim
             } else {
@@ -380,19 +406,22 @@ struct ClaimEditorView: View {
                     valueAtRisk: value,
                     deadline: resolvedDeadline,
                     reminderDate: resolvedReminder,
-                    referenceNumber: normalizedOptional(referenceNumber, limit: 120),
-                    policySummary: normalizedRequired(policySummary, limit: 1_500),
-                    actionURLString: normalizedOptional(actionURLString, limit: 500),
-                    notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
-                    status: status
+                    referenceNumber: ClaimTextLimits.optional(referenceNumber, limit: ClaimTextLimits.reference),
+                    policySummary: ClaimTextLimits.required(policySummary, limit: ClaimTextLimits.policySummary),
+                    actionURLString: normalizedActionURL,
+                    notes: ClaimTextLimits.required(notes, limit: ClaimTextLimits.notes),
+                    status: resolvedStatus
                 )
                 applyCompletionState(to: claim)
+                claim.normalizeStoredFields()
                 modelContext.insert(claim)
+                insertedClaim = claim
                 targetClaim = claim
             }
 
             if let pendingPhotoData {
                 let fileName = try FileStorageService.shared.saveImageData(pendingPhotoData, preferredName: normalizedTitle)
+                createdLocalFileName = fileName
                 let proof = ProofItem(
                     type: .photo,
                     localFileName: fileName,
@@ -401,12 +430,14 @@ struct ClaimEditorView: View {
                     intelligence: pendingProofIntelligence,
                     claim: targetClaim
                 )
+                createdProof = proof
                 modelContext.insert(proof)
                 targetClaim.proofItemsList.append(proof)
                 targetClaim.touch()
             }
 
             try modelContext.save()
+            createdLocalFileName = nil
 
             if reminderEnabled, targetClaim.status.isOpen {
                 await NotificationService.shared.scheduleReminder(for: targetClaim)
@@ -416,6 +447,16 @@ struct ClaimEditorView: View {
 
             dismiss()
         } catch {
+            if let createdProof {
+                modelContext.delete(createdProof)
+            }
+            if let insertedClaim {
+                modelContext.delete(insertedClaim)
+            } else if let claim, let existingClaimSnapshot {
+                existingClaimSnapshot.restore(to: claim)
+            }
+            _ = FileStorageService.shared.deleteFile(named: createdLocalFileName)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
         }
     }
@@ -424,11 +465,12 @@ struct ClaimEditorView: View {
         switch claim.status {
         case .recovered:
             claim.completedAt = claim.completedAt ?? Date()
-            claim.recoveredValue = claim.recoveredValue == 0 ? claim.valueAtRisk : claim.recoveredValue
-        case .used, .ignored:
+            let recoveredValue = CurrencyFormatter.sanitizedAmount(claim.recoveredValue)
+            let valueAtRisk = CurrencyFormatter.sanitizedAmount(claim.valueAtRisk)
+            claim.recoveredValue = recoveredValue > 0 ? min(recoveredValue, valueAtRisk) : valueAtRisk
+        case .used, .expired, .ignored:
             claim.completedAt = claim.completedAt ?? Date()
-        case .expired:
-            claim.completedAt = claim.completedAt
+            claim.recoveredValue = 0
         case .active, .urgent, .overdue:
             claim.completedAt = nil
             claim.recoveredValue = 0
@@ -453,15 +495,6 @@ struct ClaimEditorView: View {
         case .other:
             false
         }
-    }
-
-    private func normalizedOptional(_ value: String, limit: Int) -> String? {
-        let normalized = normalizedRequired(value, limit: limit)
-        return normalized.isEmpty ? nil : normalized
-    }
-
-    private func normalizedRequired(_ value: String, limit: Int) -> String {
-        String(value.trimmingCharacters(in: .whitespacesAndNewlines).prefix(limit))
     }
 
     private func normalizeReminderDateIfNeeded() {
@@ -490,17 +523,16 @@ struct ClaimEditorView: View {
                 errorMessage = "Could not load that photo."
                 return
             }
+            guard data.count <= FileStorageService.maximumProofFileBytes else {
+                errorMessage = FileStorageError.proofFileTooLarge.localizedDescription
+                return
+            }
             pendingPhotoData = data
             pendingPhotoName = "Proof Photo"
-            if let image = UIImage(data: data) {
-                let result = await OCRService.shared.recognizeText(in: image)
-                let searchableText = result.searchableText
-                pendingExtractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
-                pendingProofIntelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: category)
-            } else {
-                pendingExtractedText = nil
-                pendingProofIntelligence = nil
-            }
+            let result = await OCRService.shared.recognizeText(inImageData: data)
+            let searchableText = result.searchableText
+            pendingExtractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
+            pendingProofIntelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: category)
         } catch {
             errorMessage = "Could not load that photo."
         }

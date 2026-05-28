@@ -13,7 +13,10 @@ DueProof does not upload your data to our servers.
 - SwiftData stores local proof file references; proof file bytes live in protected local app storage and are included in complete user-initiated exports when available.
 - Optional iCloud Sync uses the user's private CloudKit database and mirrors proof file bytes for that user's devices when enabled.
 - Optional App Lock uses device authentication for Face ID, Touch ID, or passcode unlock and does not give DueProof biometric data.
+- Spotlight indexing is opt-in and is cleared while App Lock is enabled.
+- Widgets refuse to load private snapshots while App Lock is enabled.
 - Complete JSON export includes claim details, proof metadata, and locally stored proof file data when available.
+- Share-extension file intake is size-bounded before queued proof files are stored.
 - Local notifications are used only for reminders the user enables.
 - Calendar export creates a local `.ics` file for native sharing.
 - Smart Fill uses on-device text and barcode recognition through Apple Vision.

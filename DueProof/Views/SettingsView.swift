@@ -16,7 +16,9 @@ struct SettingsView: View {
     @State private var importResult: String?
     @State private var errorMessage: String?
     @AppStorage(SyncConfiguration.iCloudSyncEnabledKey) private var iCloudSyncEnabled = false
+    @AppStorage(SyncConfiguration.iCloudSyncRequiresRestartKey) private var iCloudSyncRequiresRestart = false
     @AppStorage(AppLockSettings.isEnabledKey, store: AppLockSettings.defaults) private var appLockEnabled = false
+    @AppStorage(DueProofPrivacySettings.spotlightSearchEnabledKey, store: DueProofPrivacySettings.defaults) private var spotlightSearchEnabled = false
 
     var body: some View {
         NavigationStack {
@@ -88,10 +90,22 @@ struct SettingsView: View {
             })) {
                 Label("Require Face ID or Passcode", systemImage: "lock.shield")
             }
+
+            Toggle(isOn: Binding(get: {
+                spotlightSearchEnabled
+            }, set: { isEnabled in
+                spotlightSearchEnabled = isEnabled && !appLockEnabled
+                if !spotlightSearchEnabled {
+                    SpotlightIndexService.shared.deleteAll()
+                }
+            })) {
+                Label("Show Claims in Spotlight", systemImage: "magnifyingglass")
+            }
+            .disabled(appLockEnabled)
         } header: {
             Text("Security")
         } footer: {
-            Text("App Lock uses device authentication to hide claim details and proof when DueProof becomes active. It does not upload or share biometric data.")
+            Text("App Lock uses device authentication to hide claim details and proof when DueProof becomes active. Spotlight search is off by default and disabled while App Lock is on so claim details do not appear outside DueProof.")
         }
     }
 
@@ -153,12 +167,24 @@ struct SettingsView: View {
 
     private var syncSection: some View {
         Section {
-            Toggle(isOn: $iCloudSyncEnabled) {
+            Toggle(isOn: Binding(get: {
+                iCloudSyncEnabled
+            }, set: { isEnabled in
+                SyncConfiguration.setICloudSyncEnabled(isEnabled)
+                iCloudSyncEnabled = isEnabled
+                iCloudSyncRequiresRestart = SyncConfiguration.iCloudSyncRequiresRestart
+            })) {
                 Label("iCloud Sync", systemImage: "icloud")
             }
 
             LabeledContent("Container", value: DueProofShared.cloudKitContainerIdentifier)
                 .font(.footnote)
+
+            if iCloudSyncRequiresRestart {
+                Label("Restart DueProof to apply this sync change.", systemImage: "arrow.clockwise.circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
         } header: {
             Text("Sync")
         } footer: {
@@ -204,11 +230,19 @@ struct SettingsView: View {
         }
 
         appLockEnabled = true
+        spotlightSearchEnabled = false
+        SpotlightIndexService.shared.deleteAll()
+        ClaimSnapshotService.shared.clear()
+        FileStorageService.shared.cleanupTemporaryExports()
+        exportURL = nil
+        reportURL = nil
     }
 
     private func createExport() {
         do {
+            let previousExportURL = exportURL
             exportURL = try ImportExportService.shared.exportClaims(claims)
+            FileStorageService.shared.deleteTemporaryExport(at: previousExportURL)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -216,7 +250,9 @@ struct SettingsView: View {
 
     private func createReport() {
         do {
+            let previousReportURL = reportURL
             reportURL = try ClaimReportExportService.shared.exportCSV(claims: claims)
+            FileStorageService.shared.deleteTemporaryExport(at: previousReportURL)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -230,13 +266,21 @@ struct SettingsView: View {
                 if hasAccess { url.stopAccessingSecurityScopedResource() }
             }
 
-            let importedCount = try ImportExportService.shared.importClaims(from: url, into: modelContext)
-            let importedClaims = try modelContext.fetch(FetchDescriptor<Claim>())
-            importResult = importedCount == 1 ? "Imported 1 claim." : "Imported \(importedCount) claims."
+            let importResult = try ImportExportService.shared.importClaimsWithResult(from: url, into: modelContext)
+            self.importResult = importResult.insertedCount == 1 ? "Imported 1 claim." : "Imported \(importResult.insertedCount) claims."
 
             Task { @MainActor in
-                for claim in importedClaims where claim.status.isOpen && claim.reminderDate != nil {
-                    await NotificationService.shared.scheduleReminder(for: claim)
+                let insertedClaimIDs = Set(importResult.insertedClaimIDs)
+                guard !insertedClaimIDs.isEmpty else { return }
+
+                do {
+                    let importedClaims = try modelContext.fetch(FetchDescriptor<Claim>())
+                        .filter { insertedClaimIDs.contains($0.id) }
+                    for claim in importedClaims where claim.status.isOpen && claim.reminderDate != nil {
+                        await NotificationService.shared.scheduleReminder(for: claim)
+                    }
+                } catch {
+                    errorMessage = "Imported claims, but DueProof could not prepare reminders: \(error.localizedDescription)"
                 }
             }
         } catch {
@@ -245,24 +289,37 @@ struct SettingsView: View {
     }
 
     private func clearAllData() {
-        do {
-            let localFileNames = claims.flatMap { claim in
-                claim.proofItemsList.compactMap(\.localFileName)
-            }
+        var pendingProofFilesClear: FileStorageService.PendingDeletion?
+        let snapshots = claims.map { claim in
+            (claim: claim, snapshot: ClaimMutationSnapshot(claim))
+        }
+        let claimIDs = claims.map(\.id)
+        var didDeleteClaims = false
 
+        do {
+            pendingProofFilesClear = try FileStorageService.shared.stageProofFilesClear()
             for claim in claims {
-                NotificationService.shared.cancelReminder(for: claim)
                 modelContext.delete(claim)
             }
+            didDeleteClaims = true
 
             try modelContext.save()
-            localFileNames.forEach { _ = FileStorageService.shared.deleteFile(named: $0) }
-            try FileStorageService.shared.clearProofFiles()
+            claimIDs.forEach { NotificationService.shared.cancelReminder(for: $0) }
+            FileStorageService.shared.commitStagedDeletion(pendingProofFilesClear)
+            SharedImportQueueStore.shared.deleteAll()
             SpotlightIndexService.shared.deleteAll()
             ClaimSnapshotService.shared.clear()
+            FileStorageService.shared.cleanupTemporaryExports()
             exportURL = nil
             reportURL = nil
         } catch {
+            if didDeleteClaims {
+                for snapshot in snapshots {
+                    snapshot.snapshot.restoreDeletedClaim(snapshot.claim, into: modelContext)
+                }
+                try? modelContext.save()
+            }
+            try? FileStorageService.shared.rollbackStagedDeletion(pendingProofFilesClear)
             errorMessage = error.localizedDescription
         }
     }
@@ -293,6 +350,7 @@ private struct PrivacyView: View {
         ("No analytics", "chart.bar.xaxis"),
         ("No tracking", "location.slash"),
         ("Optional Face ID or passcode app lock", "lock.shield"),
+        ("System search is opt-in", "magnifyingglass"),
         ("Smart Fill uses on-device text recognition", "text.viewfinder"),
         ("You review suggestions before saving", "checkmark.seal"),
         ("Proof photos stay local unless you sync or share", "photo.on.rectangle.angled"),
@@ -307,7 +365,7 @@ private struct PrivacyView: View {
                     Label(row.0, systemImage: row.1)
                 }
             } footer: {
-                Text("DueProof does not upload your data to DueProof servers. If you turn on iCloud Sync, claim data and proof files use your private iCloud database. Smart Fill uses on-device text recognition, and you review suggestions before saving.")
+                Text("DueProof does not upload your data to DueProof servers. If you turn on iCloud Sync, claim data and proof files use your private iCloud database. Smart Fill uses on-device text recognition, system search is opt-in, and you review suggestions before saving.")
             }
         }
         .navigationTitle("Privacy")

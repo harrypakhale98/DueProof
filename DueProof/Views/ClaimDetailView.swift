@@ -171,7 +171,7 @@ struct ClaimDetailView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Label(
-                    claim.reminderDate.map { DateHelpers.fullDate($0) } ?? "No reminder set",
+                    claim.reminderDate.map { DateHelpers.fullDateTime($0) } ?? "No reminder set",
                     systemImage: claim.reminderDate == nil ? "bell.slash" : "bell"
                 )
                 .font(.subheadline)
@@ -319,10 +319,11 @@ struct ClaimDetailView: View {
     private var bottomActionBar: some View {
         HStack(spacing: 12) {
             Button {
-                updateClaim {
+                if updateClaim({
                     claim.markRecovered()
+                }) {
+                    NotificationService.shared.cancelReminder(for: claim)
                 }
-                NotificationService.shared.cancelReminder(for: claim)
             } label: {
                 Label("Recovered", systemImage: "checkmark.circle.fill")
                     .frame(maxWidth: .infinity)
@@ -331,10 +332,11 @@ struct ClaimDetailView: View {
             .tint(.green)
 
             Button {
-                updateClaim {
+                if updateClaim({
                     claim.markUsed()
+                }) {
+                    NotificationService.shared.cancelReminder(for: claim)
                 }
-                NotificationService.shared.cancelReminder(for: claim)
             } label: {
                 Label("Used", systemImage: "checkmark.seal.fill")
                     .frame(maxWidth: .infinity)
@@ -353,19 +355,21 @@ struct ClaimDetailView: View {
         Menu {
             Section("Claim") {
                 Button {
-                    updateClaim {
+                    if updateClaim({
                         claim.markExpired()
+                    }) {
+                        NotificationService.shared.cancelReminder(for: claim)
                     }
-                    NotificationService.shared.cancelReminder(for: claim)
                 } label: {
                     Label("Mark as Expired", systemImage: "xmark.circle")
                 }
 
                 Button {
-                    updateClaim {
+                    if updateClaim({
                         claim.markIgnored()
+                    }) {
+                        NotificationService.shared.cancelReminder(for: claim)
                     }
-                    NotificationService.shared.cancelReminder(for: claim)
                 } label: {
                     Label("Mark as Ignored", systemImage: "minus.circle")
                 }
@@ -401,34 +405,38 @@ struct ClaimDetailView: View {
         .accessibilityLabel("More actions")
     }
 
-    private func updateClaim(_ changes: () -> Void) {
+    @discardableResult
+    private func updateClaim(_ changes: () -> Void) -> Bool {
+        let snapshot = ClaimMutationSnapshot(claim)
         changes()
+        claim.normalizeStoredFields()
         do {
             try modelContext.save()
             actionPulse += 1
+            return true
         } catch {
+            snapshot.restore(to: claim)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
+            return false
         }
     }
 
     @MainActor
     private func addPhoto(_ item: PhotosPickerItem?) async {
         guard let item else { return }
+        let snapshot = ClaimMutationSnapshot(claim)
+        var createdLocalFileName: String?
+        var createdProof: ProofItem?
 
         do {
             guard let data = try await item.loadTransferable(type: Data.self) else { return }
             let fileName = try FileStorageService.shared.saveImageData(data, preferredName: claim.title)
-            let extractedText: String?
-            let intelligence: ProofIntelligence?
-            if let image = UIImage(data: data) {
-                let result = await OCRService.shared.recognizeText(in: image)
-                let searchableText = result.searchableText
-                extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
-                intelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: claim.category)
-            } else {
-                extractedText = nil
-                intelligence = nil
-            }
+            createdLocalFileName = fileName
+            let result = await OCRService.shared.recognizeText(inImageData: data)
+            let searchableText = result.searchableText
+            let extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
+            let intelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: claim.category)
             let proof = ProofItem(
                 type: .photo,
                 localFileName: fileName,
@@ -437,18 +445,28 @@ struct ClaimDetailView: View {
                 intelligence: intelligence,
                 claim: claim
             )
+            createdProof = proof
             modelContext.insert(proof)
             claim.proofItemsList.append(proof)
             claim.touch()
             try modelContext.save()
+            createdLocalFileName = nil
         } catch {
+            if let createdProof {
+                modelContext.delete(createdProof)
+            }
+            snapshot.restore(to: claim)
+            _ = FileStorageService.shared.deleteFile(named: createdLocalFileName)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
         }
     }
 
     private func createCalendarFile() {
         do {
+            let previousCalendarURL = calendarURL
             calendarURL = try CalendarExportService.shared.exportDeadline(for: claim)
+            FileStorageService.shared.deleteTemporaryExport(at: previousCalendarURL)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -456,7 +474,9 @@ struct ClaimDetailView: View {
 
     private func createProofPacket() {
         do {
+            let previousProofPacketURL = proofPacketURL
             proofPacketURL = try ProofPacketExportService.shared.exportPacket(for: claim)
+            FileStorageService.shared.deleteTemporaryExport(at: previousProofPacketURL)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -464,7 +484,9 @@ struct ClaimDetailView: View {
 
     private func createClaimMessage() {
         do {
+            let previousClaimMessageURL = claimMessageURL
             claimMessageURL = try ClaimActionPlanService.shared.exportMessage(for: claim)
+            FileStorageService.shared.deleteTemporaryExport(at: previousClaimMessageURL)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -472,6 +494,10 @@ struct ClaimDetailView: View {
 
     @MainActor
     private func importProofFile(_ result: Result<URL, Error>) async {
+        let snapshot = ClaimMutationSnapshot(claim)
+        var createdLocalFileName: String?
+        var createdProof: ProofItem?
+
         do {
             let url = try result.get()
             let hasAccess = url.startAccessingSecurityScopedResource()
@@ -479,7 +505,7 @@ struct ClaimDetailView: View {
                 if hasAccess { url.stopAccessingSecurityScopedResource() }
             }
 
-            let data = try Data(contentsOf: url)
+            let data = try FileStorageService.shared.dataForImportedProof(at: url)
             let isImage = UTType(filenameExtension: url.pathExtension)?.conforms(to: .image) == true
             let proofType: ProofItemType = isImage ? .photo : .document
             let fileName: String
@@ -488,11 +514,12 @@ struct ClaimDetailView: View {
             } else {
                 fileName = try FileStorageService.shared.saveDocumentData(data, originalFileName: url.lastPathComponent)
             }
+            createdLocalFileName = fileName
 
             let extractedText: String?
             let intelligence: ProofIntelligence?
-            if isImage, let image = UIImage(data: data) {
-                let result = await OCRService.shared.recognizeText(in: image)
+            if isImage {
+                let result = await OCRService.shared.recognizeText(inImageData: data)
                 let searchableText = result.searchableText
                 extractedText = searchableText.isEmpty ? nil : String(searchableText.prefix(12_000))
                 intelligence = await ProofIntelligenceService.shared.analyze(ocrResult: result, categoryHint: claim.category)
@@ -518,25 +545,47 @@ struct ClaimDetailView: View {
                 intelligence: intelligence,
                 claim: claim
             )
+            createdProof = proof
             modelContext.insert(proof)
             claim.proofItemsList.append(proof)
             claim.touch()
             try modelContext.save()
+            createdLocalFileName = nil
         } catch {
+            if let createdProof {
+                modelContext.delete(createdProof)
+            }
+            snapshot.restore(to: claim)
+            _ = FileStorageService.shared.deleteFile(named: createdLocalFileName)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
         }
     }
 
     private func deleteClaim() {
+        let snapshot = ClaimMutationSnapshot(claim)
         let localFileNames = claim.proofItemsList.compactMap(\.localFileName)
-        NotificationService.shared.cancelReminder(for: claim)
-        modelContext.delete(claim)
+        let claimID = claim.id
+        var pendingDeletions: [FileStorageService.PendingDeletion] = []
+        var didDeleteClaim = false
 
         do {
+            pendingDeletions = try FileStorageService.shared.stageFileDeletions(named: localFileNames)
+            modelContext.delete(claim)
+            didDeleteClaim = true
+
             try modelContext.save()
-            localFileNames.forEach { _ = FileStorageService.shared.deleteFile(named: $0) }
+            NotificationService.shared.cancelReminder(for: claimID)
+            FileStorageService.shared.commitStagedDeletions(pendingDeletions)
             dismiss()
         } catch {
+            if didDeleteClaim {
+                snapshot.restoreDeletedClaim(claim, into: modelContext)
+            } else {
+                snapshot.restore(to: claim)
+            }
+            FileStorageService.shared.rollbackStagedDeletions(pendingDeletions)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
         }
     }

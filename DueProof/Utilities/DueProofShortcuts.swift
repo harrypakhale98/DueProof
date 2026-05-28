@@ -125,11 +125,12 @@ private enum DueProofShortcutURL {
     }
 
     static func search(_ query: String) throws -> URL {
+        let normalizedQuery = ClaimSearchIntent.normalizedQuery(query)
         var components = URLComponents()
         components.scheme = "dueproof"
         components.host = "search"
         components.queryItems = [
-            URLQueryItem(name: "q", value: query)
+            URLQueryItem(name: "q", value: normalizedQuery)
         ]
 
         guard let url = components.url else {

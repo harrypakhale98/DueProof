@@ -147,17 +147,21 @@ struct ProofGalleryView: View {
     }
 
     private func remove(_ proof: ProofItem) {
-        let localFileName = proof.localFileName
-        modelContext.delete(proof)
-        claim.touch()
+        let snapshot = ClaimMutationSnapshot(claim)
+        var pendingDeletion: FileStorageService.PendingDeletion?
 
         do {
+            pendingDeletion = try FileStorageService.shared.stageFileDeletion(named: proof.localFileName)
+            modelContext.delete(proof)
+            claim.touch()
+
             try modelContext.save()
-            let removedFile = FileStorageService.shared.deleteFile(named: localFileName)
-            if !removedFile {
-                errorMessage = "DueProof removed the proof record, but could not remove the local proof file."
-            }
+            FileStorageService.shared.commitStagedDeletion(pendingDeletion)
         } catch {
+            modelContext.insert(proof)
+            snapshot.restore(to: claim)
+            try? FileStorageService.shared.rollbackStagedDeletion(pendingDeletion)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
         }
     }

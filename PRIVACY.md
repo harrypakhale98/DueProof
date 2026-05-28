@@ -22,6 +22,8 @@ Optional iCloud Sync uses the user's private iCloud database. DueProof does not 
 
 Optional App Lock uses device authentication to hide claim details and proof behind Face ID, Touch ID, or the device passcode when enabled. DueProof does not receive biometric data.
 
+System Spotlight search for claim details is off by default and must be enabled by the user. DueProof clears Spotlight entries and disables the setting while App Lock is enabled so private claim details do not appear outside the app.
+
 Local notifications are used only for reminders the user enables.
 
 Smart Fill uses on-device text recognition, including visible text and machine-readable identifiers such as barcodes when iOS can detect them. When available, DueProof uses Apple's on-device intelligence to suggest claim details. Proof is not uploaded to DueProof servers, and the user reviews suggestions before saving.

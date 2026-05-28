@@ -147,9 +147,17 @@ struct SmartFillView: View {
         defer { isProcessing = false }
 
         do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let image = UIImage(data: data)
-            else {
+            guard let data = try await item.loadTransferable(type: Data.self) else {
+                errorMessage = "DueProof could not read that proof image."
+                return
+            }
+
+            guard data.count <= FileStorageService.maximumProofFileBytes else {
+                errorMessage = FileStorageError.proofFileTooLarge.localizedDescription
+                return
+            }
+
+            guard let image = OCRService.shared.preparedImage(from: data) else {
                 errorMessage = "DueProof could not read that proof image."
                 return
             }
@@ -170,7 +178,17 @@ struct SmartFillView: View {
             return
         }
 
-        await processImageData(data, image: image, displayName: "Camera Proof")
+        guard data.count <= FileStorageService.maximumProofFileBytes else {
+            errorMessage = FileStorageError.proofFileTooLarge.localizedDescription
+            return
+        }
+
+        guard let preparedImage = OCRService.shared.preparedImage(from: data) else {
+            errorMessage = "DueProof could not read that proof image."
+            return
+        }
+
+        await processImageData(data, image: preparedImage, displayName: "Camera Proof")
     }
 
     @MainActor
@@ -185,11 +203,11 @@ struct SmartFillView: View {
                 if hasAccess { url.stopAccessingSecurityScopedResource() }
             }
 
-            let data = try Data(contentsOf: url)
+            let data = try FileStorageService.shared.dataForImportedProof(at: url)
             let type = UTType(filenameExtension: url.pathExtension)
 
             if type?.conforms(to: .image) == true,
-               let image = UIImage(data: data) {
+               let image = OCRService.shared.preparedImage(from: data) {
                 await processImageData(data, image: image, displayName: url.lastPathComponent)
                 return
             }
@@ -217,6 +235,11 @@ struct SmartFillView: View {
 
     @MainActor
     private func processImageData(_ data: Data, image: UIImage, displayName: String) async {
+        guard data.count <= FileStorageService.maximumProofFileBytes else {
+            errorMessage = FileStorageError.proofFileTooLarge.localizedDescription
+            return
+        }
+
         let result = await OCRService.shared.recognizeText(in: image)
         await processRecognizedProof(
             data: data,

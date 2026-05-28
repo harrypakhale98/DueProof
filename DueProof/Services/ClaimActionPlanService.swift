@@ -19,25 +19,26 @@ final class ClaimActionPlanService {
     private init() {}
 
     func plan(for claim: Claim) -> ClaimActionPlan {
-        let deadlineText = DateHelpers.deadlineText(for: claim.deadline)
+        let context = ActionPlanContext(claim: claim)
         let proofText = claim.proofItemsList.isEmpty
             ? "Attach at least one receipt, document, screenshot, or note before contacting support."
             : "\(claim.proofItemsList.count) proof item\(claim.proofItemsList.count == 1 ? "" : "s") attached."
 
         return ClaimActionPlan(
             headline: headline(for: claim),
-            nextStep: nextStep(for: claim, deadlineText: deadlineText, proofText: proofText),
-            checklist: checklist(for: claim, proofText: proofText),
-            messageSubject: messageSubject(for: claim),
-            messageBody: messageBody(for: claim, deadlineText: deadlineText)
+            nextStep: nextStep(for: claim, context: context, proofText: proofText),
+            checklist: checklist(for: claim, context: context, proofText: proofText),
+            messageSubject: messageSubject(for: claim, context: context),
+            messageBody: messageBody(for: claim, context: context)
         )
     }
 
     func exportMessage(for claim: Claim) throws -> URL {
         let plan = plan(for: claim)
+        let context = ActionPlanContext(claim: claim)
         let data = Data(plan.exportText.utf8)
         return try FileStorageService.shared.protectedTemporaryURL(
-            fileName: "\(claim.title)-claim-message.txt",
+            fileName: "\(context.title)-claim-message.txt",
             data: data
         )
     }
@@ -65,23 +66,32 @@ final class ClaimActionPlanService {
         }
     }
 
-    private func nextStep(for claim: Claim, deadlineText: String, proofText: String) -> String {
-        if claim.isOverdue {
-            return "Review \(claim.title) now. It is overdue, so lead with the proof and ask whether the claim can still be honored."
+    private func nextStep(for claim: Claim, context: ActionPlanContext, proofText: String) -> String {
+        if context.hasUsableDeadline, claim.isOverdue {
+            return "Review \(context.title) now. It is overdue, so lead with the proof and ask whether the claim can still be honored."
         }
 
-        if claim.isUrgent {
-            return "Act before \(deadlineText). \(proofText)"
+        if context.hasUsableDeadline, claim.isUrgent {
+            return "Act before \(context.deadlineText). \(proofText)"
+        }
+
+        if !context.hasUsableDeadline {
+            if claim.proofItemsList.isEmpty {
+                let deadlineAction = context.hasStoredDeadline ? "Confirm the saved deadline" : "Set a deadline"
+                return "\(deadlineAction) and attach proof for \(context.title). \(claim.displayValue) is at risk."
+            }
+
+            return "Confirm the deadline for \(context.title). \(proofText)"
         }
 
         if claim.proofItemsList.isEmpty {
-            return "Attach proof before the deadline. \(claim.title) has \(claim.displayValue) at risk."
+            return "Attach proof before the deadline. \(context.title) has \(claim.displayValue) at risk."
         }
 
-        return "Keep proof ready and act before \(deadlineText)."
+        return "Keep proof ready and act before \(context.deadlineText)."
     }
 
-    private func checklist(for claim: Claim, proofText: String) -> [String] {
+    private func checklist(for claim: Claim, context: ActionPlanContext, proofText: String) -> [String] {
         var items = baseChecklist(for: claim.category)
 
         if claim.proofItemsList.isEmpty {
@@ -90,24 +100,23 @@ final class ClaimActionPlanService {
             items.insert(proofText, at: 0)
         }
 
-        if claim.deadline == nil {
+        if !context.hasUsableDeadline {
             items.append("Confirm the deadline before relying on this claim.")
         }
 
-        if claim.valueAtRisk > 0 {
+        if CurrencyFormatter.sanitizedAmount(claim.valueAtRisk) > 0 {
             items.append("Confirm the value at risk: \(claim.displayValue).")
         }
 
-        if let merchant = claim.merchant {
+        if let merchant = context.merchant {
             items.append("Verify the merchant or provider: \(merchant).")
         }
 
-        if let identifier = claim.primaryReference ?? primaryProofIdentifier(for: claim) {
+        if let identifier = context.reference {
             items.append("Keep this reference ready: \(identifier).")
         }
 
-        let policySummary = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !policySummary.isEmpty {
+        if context.policySummary != nil {
             items.append("Review the saved policy note before acting.")
         }
 
@@ -116,12 +125,6 @@ final class ClaimActionPlanService {
         }
 
         return Array(items.prefix(9))
-    }
-
-    private func primaryProofIdentifier(for claim: Claim) -> String? {
-        claim.proofItemsList.compactMap { proof in
-            proof.intelligence?.primaryIdentifier
-        }.first
     }
 
     private func baseChecklist(for category: ClaimCategory) -> [String] {
@@ -183,17 +186,16 @@ final class ClaimActionPlanService {
         }
     }
 
-    private func messageSubject(for claim: Claim) -> String {
-        let merchant = claim.merchant.map { "\($0) " } ?? ""
-        return "\(merchant)\(claim.categoryDisplayName) - \(claim.title)"
+    private func messageSubject(for claim: Claim, context: ActionPlanContext) -> String {
+        let merchant = context.merchant.map { "\($0) " } ?? ""
+        return "\(merchant)\(claim.categoryDisplayName) - \(context.title)"
     }
 
-    private func messageBody(for claim: Claim, deadlineText: String) -> String {
-        let merchantLine = claim.merchant.map { "Provider: \($0)\n" } ?? ""
-        let referenceLine = claim.primaryReference.map { "Reference: \($0)\n" } ?? ""
-        let policy = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
-        let policyLine = policy.isEmpty ? "" : "Policy note: \(policy)\n"
-        let actionLine = claim.actionURLString.map { "Action link: \($0)\n" } ?? ""
+    private func messageBody(for claim: Claim, context: ActionPlanContext) -> String {
+        let merchantLine = context.merchant.map { "Provider: \($0)\n" } ?? ""
+        let referenceLine = context.reference.map { "Reference: \($0)\n" } ?? ""
+        let policyLine = context.policySummary.map { "Policy note: \($0)\n" } ?? ""
+        let actionLine = claim.actionURL.map { "Action link: \($0.absoluteString)\n" } ?? ""
         let proofLine = claim.proofItemsList.isEmpty
             ? "I can provide proof of purchase or supporting documents if needed."
             : "I have attached the relevant proof for review."
@@ -201,11 +203,11 @@ final class ClaimActionPlanService {
         return """
         Hello,
 
-        I am following up about \(claim.title).
+        I am following up about \(context.title).
 
         \(merchantLine)Claim type: \(claim.categoryDisplayName)
         Value at risk: \(claim.displayValue)
-        Deadline: \(deadlineText)
+        Deadline: \(context.deadlineText)
         \(referenceLine)\(policyLine)\(actionLine)Current status: \(claim.statusDisplayName)
 
         \(proofLine)
@@ -214,5 +216,33 @@ final class ClaimActionPlanService {
 
         Thank you.
         """
+    }
+}
+
+private struct ActionPlanContext {
+    let title: String
+    let merchant: String?
+    let reference: String?
+    let policySummary: String?
+    let deadlineText: String
+    let hasStoredDeadline: Bool
+    let hasUsableDeadline: Bool
+
+    init(claim: Claim) {
+        title = Self.inlineText(claim.title, limit: ClaimTextLimits.title) ?? "Untitled claim"
+        merchant = Self.inlineText(claim.merchant, limit: ClaimTextLimits.merchant)
+        reference = Self.inlineText(claim.primaryReference, limit: ClaimTextLimits.reference)
+        policySummary = Self.inlineText(claim.policySummary, limit: ClaimTextLimits.policySummary)
+        hasStoredDeadline = claim.deadline != nil
+        hasUsableDeadline = claim.deadline?.timeIntervalSinceReferenceDate.isFinite == true
+        deadlineText = DateHelpers.deadlineText(for: claim.deadline)
+    }
+
+    private static func inlineText(_ value: String?, limit: Int) -> String? {
+        let normalized = ClaimTextLimits.required(value ?? "", limit: limit)
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return normalized.isEmpty ? nil : normalized
     }
 }

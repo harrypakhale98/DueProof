@@ -25,11 +25,11 @@ final class ClaimReportExportService {
         ]
 
         let rows = claims
-            .sorted { ($0.deadline ?? .distantFuture) < ($1.deadline ?? .distantFuture) }
+            .sorted { ClaimListOrdering.deadlineSoonest($0, $1) }
             .map(row)
 
         let csv = ([header] + rows)
-            .map { $0.map(Self.escape).joined(separator: ",") }
+            .map { $0.map(Self.safeCell).map(Self.escape).joined(separator: ",") }
             .joined(separator: "\n")
 
         return try FileStorageService.shared.protectedTemporaryURL(
@@ -39,23 +39,33 @@ final class ClaimReportExportService {
     }
 
     private func row(for claim: Claim) -> [String] {
-        [
-            claim.title,
+        let title = normalizedRequired(claim.title, limit: ClaimTextLimits.title, fallback: "Untitled claim")
+        let merchant = ClaimTextLimits.optional(claim.merchant, limit: ClaimTextLimits.merchant) ?? ""
+        let policySummary = ClaimTextLimits.required(claim.policySummary, limit: ClaimTextLimits.policySummary)
+        let notes = ClaimTextLimits.required(claim.notes, limit: ClaimTextLimits.notes)
+
+        return [
+            title,
             claim.categoryDisplayName,
-            claim.merchant ?? "",
+            merchant,
             claim.statusDisplayName,
             CurrencyFormatter.editingString(claim.valueAtRisk),
             CurrencyFormatter.editingString(claim.recoveredValue),
-            claim.deadline.map(DateHelpers.fullDate) ?? "",
-            claim.reminderDate.map(DateHelpers.fullDate) ?? "",
+            claim.deadline.map(DateHelpers.fullDateTime) ?? "",
+            claim.reminderDate.map(DateHelpers.fullDateTime) ?? "",
             claim.primaryReference ?? "",
-            claim.policySummary,
-            claim.actionURLString ?? "",
+            policySummary,
+            claim.actionURL?.absoluteString ?? "",
             "\(claim.proofItemsList.count)",
-            DateHelpers.fullDate(claim.createdAt),
-            DateHelpers.fullDate(claim.updatedAt),
-            claim.notes
+            DateHelpers.fullDateTime(claim.createdAt),
+            DateHelpers.fullDateTime(claim.updatedAt),
+            notes
         ]
+    }
+
+    private func normalizedRequired(_ value: String, limit: Int, fallback: String) -> String {
+        let normalized = ClaimTextLimits.required(value, limit: limit)
+        return normalized.isEmpty ? fallback : normalized
     }
 
     private static func escape(_ value: String) -> String {
@@ -63,5 +73,15 @@ final class ClaimReportExportService {
         let needsQuotes = normalized.contains(",") || normalized.contains("\"") || normalized.contains("\n")
         let escaped = normalized.replacingOccurrences(of: "\"", with: "\"\"")
         return needsQuotes ? "\"\(escaped)\"" : escaped
+    }
+
+    private static func safeCell(_ value: String) -> String {
+        guard let first = value.trimmingCharacters(in: .whitespacesAndNewlines).first,
+              ["=", "+", "-", "@", "\t"].contains(first)
+        else {
+            return value
+        }
+
+        return "'\(value)"
     }
 }

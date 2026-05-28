@@ -35,11 +35,17 @@ final class ShareViewController: UIViewController {
 
     @MainActor
     private func saveSharedItems() async {
+        var pendingRequestID: UUID?
+
         do {
             let request = try await makeImportRequest()
+            pendingRequestID = request.id
             try SharedImportQueueStore.shared.save(request)
             openDueProof(requestID: request.id)
         } catch {
+            if let pendingRequestID {
+                SharedImportQueueStore.shared.delete(id: pendingRequestID)
+            }
             statusLabel.text = error.localizedDescription
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                 self.extensionContext?.cancelRequest(withError: error)
@@ -53,74 +59,90 @@ final class ShareViewController: UIViewController {
             .flatMap { $0.attachments ?? [] } ?? []
 
         let requestID = UUID()
-        var items: [SharedImportItem] = []
+        do {
+            var items: [SharedImportItem] = []
 
-        for provider in providers {
-            if let item = try await loadImageItem(from: provider, requestID: requestID) {
-                items.append(item)
-                continue
+            for provider in providers {
+                if let item = try await loadImageItem(from: provider, requestID: requestID) {
+                    items.append(item)
+                    continue
+                }
+
+                if let item = try await loadPDFItem(from: provider, requestID: requestID) {
+                    items.append(item)
+                    continue
+                }
+
+                if let item = try await loadURLItem(from: provider) {
+                    items.append(item)
+                    continue
+                }
+
+                if let item = try await loadTextItem(from: provider) {
+                    items.append(item)
+                }
             }
 
-            if let item = try await loadPDFItem(from: provider, requestID: requestID) {
-                items.append(item)
-                continue
+            guard !items.isEmpty else {
+                throw DueProofSharedStorageError.emptyImportRequest
             }
 
-            if let item = try await loadURLItem(from: provider) {
-                items.append(item)
-                continue
-            }
-
-            if let item = try await loadTextItem(from: provider) {
-                items.append(item)
-            }
+            return SharedImportRequest(
+                id: requestID,
+                sourceApplication: nil,
+                suggestedTitle: suggestedTitle(from: items),
+                items: items
+            )
+        } catch {
+            SharedImportQueueStore.shared.delete(id: requestID)
+            throw error
         }
-
-        guard !items.isEmpty else {
-            throw DueProofSharedStorageError.emptyImportRequest
-        }
-
-        return SharedImportRequest(
-            id: requestID,
-            sourceApplication: nil,
-            suggestedTitle: suggestedTitle(from: items),
-            items: items
-        )
     }
 
     private func loadImageItem(from provider: NSItemProvider, requestID: UUID) async throws -> SharedImportItem? {
-        guard provider.hasItemConformingToTypeIdentifier(UTType.image.identifier),
-              let data = try await loadData(from: provider, type: .image)
-        else {
+        guard provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) else {
             return nil
         }
 
-        let storedFileName = try SharedImportQueueStore.shared.writeFile(
-            data: data,
-            originalFileName: provider.suggestedName.map { "\($0).jpg" },
-            requestID: requestID
+        let originalFileName = DueProofSharedFileName.originalFileName(
+            suggestedName: provider.suggestedName,
+            fallbackBaseName: "Shared Photo",
+            fileExtension: "jpg"
         )
+        guard let storedFileName = try await loadFile(
+            from: provider,
+            type: .image,
+            originalFileName: originalFileName,
+            requestID: requestID
+        ) else {
+            return nil
+        }
 
         return SharedImportItem(
             kind: .image,
-            originalFileName: provider.suggestedName ?? "Shared Photo",
+            originalFileName: originalFileName,
             storedFileName: storedFileName
         )
     }
 
     private func loadPDFItem(from provider: NSItemProvider, requestID: UUID) async throws -> SharedImportItem? {
-        guard provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier),
-              let data = try await loadData(from: provider, type: .pdf)
-        else {
+        guard provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) else {
             return nil
         }
 
-        let originalFileName = provider.suggestedName.map { "\($0).pdf" } ?? "Shared Document.pdf"
-        let storedFileName = try SharedImportQueueStore.shared.writeFile(
-            data: data,
+        let originalFileName = DueProofSharedFileName.originalFileName(
+            suggestedName: provider.suggestedName,
+            fallbackBaseName: "Shared Document",
+            fileExtension: "pdf"
+        )
+        guard let storedFileName = try await loadFile(
+            from: provider,
+            type: .pdf,
             originalFileName: originalFileName,
             requestID: requestID
-        )
+        ) else {
+            return nil
+        }
 
         return SharedImportItem(
             kind: .document,
@@ -136,19 +158,24 @@ final class ShareViewController: UIViewController {
             return nil
         }
 
-        let url: URL?
+        let urlString: String?
         if let loadedURL = item as? URL {
-            url = loadedURL
+            urlString = DueProofActionURL.normalizedString(from: loadedURL.absoluteString)
         } else if let data = item as? Data {
-            url = URL(dataRepresentation: data, relativeTo: nil)
+            guard data.count <= DueProofActionURL.maximumLength * 4,
+                  let string = String(data: data, encoding: .utf8)
+            else {
+                return nil
+            }
+            urlString = DueProofActionURL.normalizedString(from: string)
         } else if let string = item as? String {
-            url = URL(string: string)
+            urlString = DueProofActionURL.normalizedString(from: string)
         } else {
-            url = nil
+            urlString = nil
         }
 
-        guard let url else { return nil }
-        return SharedImportItem(kind: .url, text: url.absoluteString, urlString: url.absoluteString)
+        guard let urlString else { return nil }
+        return SharedImportItem(kind: .url, text: urlString, urlString: urlString)
     }
 
     private func loadTextItem(from provider: NSItemProvider) async throws -> SharedImportItem? {
@@ -160,27 +187,40 @@ final class ShareViewController: UIViewController {
 
         let text: String?
         if let loadedText = item as? String {
-            text = loadedText
+            text = DueProofSharedText.normalizedText(from: loadedText)
         } else if let data = item as? Data {
-            text = String(data: data, encoding: .utf8)
+            text = DueProofSharedText.normalizedText(from: data)
         } else {
             text = nil
         }
 
-        guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return nil
-        }
-
+        guard let text else { return nil }
         return SharedImportItem(kind: .text, text: text)
     }
 
-    private func loadData(from provider: NSItemProvider, type: UTType) async throws -> Data? {
+    private func loadFile(
+        from provider: NSItemProvider,
+        type: UTType,
+        originalFileName: String,
+        requestID: UUID
+    ) async throws -> String? {
         try await withCheckedThrowingContinuation { continuation in
-            provider.loadDataRepresentation(forTypeIdentifier: type.identifier) { data, error in
+            provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, error in
                 if let error {
                     continuation.resume(throwing: error)
+                } else if let url {
+                    do {
+                        let storedFileName = try SharedImportQueueStore.shared.writeFile(
+                            from: url,
+                            originalFileName: originalFileName,
+                            requestID: requestID
+                        )
+                        continuation.resume(returning: storedFileName)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
                 } else {
-                    continuation.resume(returning: data)
+                    continuation.resume(returning: nil)
                 }
             }
         }
@@ -200,7 +240,7 @@ final class ShareViewController: UIViewController {
 
     private func suggestedTitle(from items: [SharedImportItem]) -> String {
         if let fileName = items.compactMap(\.originalFileName).first, !fileName.isEmpty {
-            return (fileName as NSString).deletingPathExtension
+            return String((fileName as NSString).deletingPathExtension.prefix(160))
         }
 
         if let text = items.compactMap(\.text).first?.trimmingCharacters(in: .whitespacesAndNewlines),

@@ -1,6 +1,8 @@
 import Foundation
 
 struct ClaimSearchIntent: Equatable {
+    private static let maximumSearchableTextLength = 20_000
+
     var text: String
     var categories: Set<ClaimCategory>
     var onlyMissingProof: Bool
@@ -11,8 +13,17 @@ struct ClaimSearchIntent: Equatable {
     var minValue: Double?
     var maxValue: Double?
 
+    static let maximumQueryLength = 120
+
+    static func normalizedQuery(_ query: String) -> String {
+        String(query.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maximumQueryLength))
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
     static func parse(_ query: String) -> ClaimSearchIntent {
-        var working = query
+        var working = normalizedQuery(query)
             .lowercased()
             .replacingOccurrences(of: "-", with: " ")
             .replacingOccurrences(of: "_", with: " ")
@@ -72,11 +83,11 @@ struct ClaimSearchIntent: Equatable {
             return false
         }
 
-        if onlyNoDeadline, claim.deadline != nil {
+        if onlyNoDeadline, claim.deadline?.timeIntervalSinceReferenceDate.isFinite == true {
             return false
         }
 
-        if onlyOverdue, !claim.isOverdue {
+        if onlyOverdue, !claim.hasOverdueDeadline(relativeTo: referenceDate) {
             return false
         }
 
@@ -89,11 +100,13 @@ struct ClaimSearchIntent: Equatable {
             guard days >= 0 && days <= dueWithinDays else { return false }
         }
 
-        if let minValue, claim.valueAtRisk < minValue {
+        let valueAtRisk = CurrencyFormatter.sanitizedAmount(claim.valueAtRisk)
+
+        if let minValue, valueAtRisk < minValue {
             return false
         }
 
-        if let maxValue, claim.valueAtRisk > maxValue {
+        if let maxValue, valueAtRisk > maxValue {
             return false
         }
 
@@ -106,33 +119,47 @@ struct ClaimSearchIntent: Equatable {
     }
 
     private static func searchableText(for claim: Claim) -> String {
-        var parts = [
-            claim.title,
-            claim.merchant ?? "",
-            claim.notes,
-            claim.referenceNumber ?? "",
-            claim.policySummary,
-            claim.actionURLString ?? "",
-            claim.category.displayName,
-            claim.category.pluralDisplayName,
-            claim.statusDisplayName,
-            claim.displayValue,
-            claim.urgencyLabel
-        ]
+        var parts: [String] = []
+        var remaining = maximumSearchableTextLength
+
+        func append(_ value: String?, limit: Int) {
+            guard remaining > 0 else { return }
+            let normalized = ClaimTextLimits.required(value ?? "", limit: limit)
+            guard !normalized.isEmpty else { return }
+            let bounded = String(normalized.prefix(remaining))
+            parts.append(bounded)
+            remaining -= min(remaining, bounded.count + 1)
+        }
+
+        append(claim.title, limit: ClaimTextLimits.title)
+        append(claim.merchant, limit: ClaimTextLimits.merchant)
+        append(claim.notes, limit: ClaimTextLimits.notes)
+        append(claim.primaryReference, limit: ClaimTextLimits.reference)
+        append(claim.policySummary, limit: ClaimTextLimits.policySummary)
+        append(claim.actionURL?.absoluteString, limit: ClaimTextLimits.actionURL)
+        append(claim.category.displayName, limit: 80)
+        append(claim.category.pluralDisplayName, limit: 80)
+        append(claim.statusDisplayName, limit: 40)
+        append(claim.displayValue, limit: 80)
+        append(claim.urgencyLabel, limit: 80)
 
         for proof in claim.proofItemsList {
-            parts.append(proof.displayName)
-            parts.append(proof.extractedText ?? "")
+            append(proof.displayName, limit: ProofItemTextLimits.displayName)
+            append(proof.extractedText, limit: ProofItemTextLimits.extractedText)
 
-            if let intelligence = proof.intelligence {
-                parts.append(intelligence.summary)
-                parts.append(intelligence.merchant ?? "")
-                parts.append(intelligence.category?.displayName ?? "")
-                parts.append(intelligence.orderNumber ?? "")
-                parts.append(intelligence.serialNumber ?? "")
-                parts.append(contentsOf: intelligence.barcodeValues)
-                parts.append(intelligence.deadlineLabel)
-                parts.append(contentsOf: intelligence.warnings)
+            if let intelligence = proof.intelligence?.normalizedForStorage() {
+                append(intelligence.summary, limit: 500)
+                append(intelligence.merchant, limit: ClaimTextLimits.merchant)
+                append(intelligence.category?.displayName, limit: 80)
+                append(intelligence.orderNumber, limit: ClaimTextLimits.reference)
+                append(intelligence.serialNumber, limit: ClaimTextLimits.reference)
+                for barcodeValue in intelligence.barcodeValues {
+                    append(barcodeValue, limit: ClaimTextLimits.reference)
+                }
+                append(intelligence.deadlineLabel, limit: 80)
+                for warning in intelligence.warnings {
+                    append(warning, limit: 160)
+                }
             }
         }
 
@@ -210,11 +237,15 @@ struct ClaimSearchIntent: Equatable {
     }
 
     private static func containsPhrase(_ phrase: String, in text: String) -> Bool {
-        text.range(of: phrase, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        guard let regex = phraseRegex(for: phrase) else { return false }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        return regex.firstMatch(in: text, range: range) != nil
     }
 
     private static func removingPhrase(_ phrase: String, from text: String) -> String {
-        text.replacingOccurrences(of: phrase, with: " ", options: [.caseInsensitive, .diacriticInsensitive])
+        guard let regex = phraseRegex(for: phrase) else { return text }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        return regex.stringByReplacingMatches(in: text, range: range, withTemplate: " ")
     }
 
     private static func normalizedText(_ text: String) -> String {
@@ -243,5 +274,15 @@ struct ClaimSearchIntent: Equatable {
         var mutableText = text
         mutableText.replaceSubrange(swiftRange, with: " ")
         return mutableText
+    }
+
+    private static func phraseRegex(for phrase: String) -> NSRegularExpression? {
+        let escaped = phrase
+            .split(whereSeparator: \.isWhitespace)
+            .map { NSRegularExpression.escapedPattern(for: String($0)) }
+            .joined(separator: #"\s+"#)
+        guard !escaped.isEmpty else { return nil }
+        let pattern = #"(?<![A-Za-z0-9])"# + escaped + #"(?![A-Za-z0-9])"#
+        return try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
     }
 }

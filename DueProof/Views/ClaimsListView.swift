@@ -55,6 +55,34 @@ private enum ClaimSortOption: String, CaseIterable, Identifiable {
     }
 }
 
+enum ClaimListOrdering {
+    static func deadlineSoonest(_ lhs: Claim, _ rhs: Claim, referenceDate: Date = Date()) -> Bool {
+        let lhsRank = deadlineRank(for: lhs, referenceDate: referenceDate)
+        let rhsRank = deadlineRank(for: rhs, referenceDate: referenceDate)
+        if lhsRank != rhsRank { return lhsRank < rhsRank }
+
+        let lhsDeadline = finiteDate(lhs.deadline) ?? .distantFuture
+        let rhsDeadline = finiteDate(rhs.deadline) ?? .distantFuture
+        if lhsDeadline != rhsDeadline { return lhsDeadline < rhsDeadline }
+
+        let lhsUpdatedAt = finiteDate(lhs.updatedAt) ?? .distantPast
+        let rhsUpdatedAt = finiteDate(rhs.updatedAt) ?? .distantPast
+        if lhsUpdatedAt != rhsUpdatedAt { return lhsUpdatedAt > rhsUpdatedAt }
+        return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+    }
+
+    private static func deadlineRank(for claim: Claim, referenceDate: Date) -> Int {
+        guard claim.status.isOpen else { return 3 }
+        guard let deadline = finiteDate(claim.deadline) else { return 2 }
+        return DateHelpers.daysUntil(deadline, from: referenceDate) < 0 ? 0 : 1
+    }
+
+    private static func finiteDate(_ value: Date?) -> Date? {
+        guard let value, value.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return value
+    }
+}
+
 struct ClaimsListView: View {
     @EnvironmentObject private var route: AppRoute
     @Query(sort: \Claim.createdAt, order: .reverse) private var claims: [Claim]
@@ -212,17 +240,16 @@ struct ClaimsListView: View {
     }
 
     private var filteredClaims: [Claim] {
-        claims
-            .filter(matchesSearch)
+        let query = ClaimSearchIntent.normalizedQuery(searchText)
+        let searchIntent = query.isEmpty ? nil : ClaimSearchIntent.parse(query)
+
+        return claims
+            .filter { claim in
+                guard let searchIntent else { return true }
+                return searchIntent.matches(claim)
+            }
             .filter(matchesFilter)
             .sorted(by: sort)
-    }
-
-    private func matchesSearch(_ claim: Claim) -> Bool {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return true }
-
-        return ClaimSearchIntent.parse(query).matches(claim)
     }
 
     private func matchesFilter(_ claim: Claim) -> Bool {
@@ -246,9 +273,9 @@ struct ClaimsListView: View {
     private func sort(_ lhs: Claim, _ rhs: Claim) -> Bool {
         switch sortOption {
         case .deadline:
-            return (lhs.deadline ?? .distantFuture) < (rhs.deadline ?? .distantFuture)
+            return ClaimListOrdering.deadlineSoonest(lhs, rhs)
         case .highestValue:
-            return lhs.valueAtRisk > rhs.valueAtRisk
+            return CurrencyFormatter.sanitizedAmount(lhs.valueAtRisk) > CurrencyFormatter.sanitizedAmount(rhs.valueAtRisk)
         case .recentlyAdded:
             return lhs.createdAt > rhs.createdAt
         case .status:

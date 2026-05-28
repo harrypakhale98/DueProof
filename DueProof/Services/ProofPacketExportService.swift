@@ -10,29 +10,32 @@ final class ProofPacketExportService {
     private init() {}
 
     func exportPacket(for claim: Claim) throws -> URL {
+        let title = normalizedRequired(claim.title, limit: ClaimTextLimits.title, fallback: "Untitled claim")
+        let policySummary = normalizedOptional(claim.policySummary, limit: ClaimTextLimits.policySummary)
+        let notes = normalizedOptional(claim.notes, limit: ClaimTextLimits.notes)
+
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize))
         let data = renderer.pdfData { context in
             context.beginPage()
             let writer = PDFPageWriter(context: context, pageSize: pageSize, margin: margin)
 
             writer.addTitle("DueProof Packet")
-            writer.addSubtitle(claim.title)
+            writer.addSubtitle(title)
             writer.addDivider()
 
             writer.addSection("Claim Summary")
             writer.addKeyValue("Category", claim.categoryDisplayName)
             writer.addKeyValue("Status", claim.statusDisplayName)
             writer.addKeyValue("Value at Risk", claim.displayValue)
-            writer.addKeyValue("Deadline", DateHelpers.deadlineText(for: claim.deadline))
-            writer.addKeyValue("Reminder", claim.reminderDate.map(DateHelpers.fullDate) ?? "No reminder set")
-            writer.addKeyValue("Merchant", claim.merchant ?? "Not set")
+            writer.addKeyValue("Deadline", deadlineText(for: claim.deadline))
+            writer.addKeyValue("Reminder", fullDateText(for: claim.reminderDate) ?? "No reminder set")
+            writer.addKeyValue("Merchant", normalizedOptional(claim.merchant, limit: ClaimTextLimits.merchant) ?? "Not set")
             writer.addKeyValue("Reference", claim.primaryReference ?? "Not set")
-            writer.addKeyValue("Action Link", claim.actionURLString ?? "Not set")
-            writer.addKeyValue("Created", DateHelpers.fullDate(claim.createdAt))
-            writer.addKeyValue("Updated", DateHelpers.fullDate(claim.updatedAt))
+            writer.addKeyValue("Action Link", claim.actionURL?.absoluteString ?? "Not set")
+            writer.addKeyValue("Created", fullDateText(for: claim.createdAt) ?? "Unknown")
+            writer.addKeyValue("Updated", fullDateText(for: claim.updatedAt) ?? "Unknown")
 
-            let policySummary = claim.policySummary.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !policySummary.isEmpty {
+            if let policySummary {
                 writer.addSection("Policy Note")
                 writer.addBody(policySummary)
             }
@@ -46,16 +49,16 @@ final class ProofPacketExportService {
                 writer.addBullet(item)
             }
 
-            if !claim.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let notes {
                 writer.addSection("Notes")
-                writer.addBody(claim.notes)
+                writer.addBody(notes)
             }
 
             writer.addSection("Proof")
             if claim.proofItemsList.isEmpty {
                 writer.addBody("No proof is attached to this claim yet.")
             } else {
-                for proof in claim.proofItemsList.sorted(by: { $0.createdAt < $1.createdAt }) {
+                for proof in claim.proofItemsList.sorted(by: proofSort) {
                     writer.addProof(proof)
                 }
             }
@@ -64,13 +67,43 @@ final class ProofPacketExportService {
         }
 
         return try FileStorageService.shared.protectedTemporaryURL(
-            fileName: "\(claim.title)-proof-packet.pdf",
+            fileName: "\(title)-proof-packet.pdf",
             data: data
         )
+    }
+
+    private func normalizedRequired(_ value: String, limit: Int, fallback: String) -> String {
+        let normalized = ClaimTextLimits.required(value, limit: limit)
+        return normalized.isEmpty ? fallback : normalized
+    }
+
+    private func normalizedOptional(_ value: String?, limit: Int) -> String? {
+        ClaimTextLimits.optional(value, limit: limit)
+    }
+
+    private func deadlineText(for date: Date?) -> String {
+        guard let date else { return "No deadline" }
+        guard date.timeIntervalSinceReferenceDate.isFinite else { return "Invalid deadline" }
+        return DateHelpers.deadlineText(for: date)
+    }
+
+    private func fullDateText(for date: Date?) -> String? {
+        guard let date else { return nil }
+        guard date.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        return DateHelpers.fullDateTime(date)
+    }
+
+    private func proofSort(_ lhs: ProofItem, _ rhs: ProofItem) -> Bool {
+        let lhsDate = lhs.createdAt.timeIntervalSinceReferenceDate.isFinite ? lhs.createdAt : .distantFuture
+        let rhsDate = rhs.createdAt.timeIntervalSinceReferenceDate.isFinite ? rhs.createdAt : .distantFuture
+        return lhsDate < rhsDate
     }
 }
 
 private final class PDFPageWriter {
+    private static let maximumDrawCharacters = 8_000
+    private static let maximumFragmentCharacters = 700
+
     private let context: UIGraphicsPDFRendererContext
     private let pageSize: CGSize
     private let margin: CGFloat
@@ -127,11 +160,12 @@ private final class PDFPageWriter {
 
     func addProof(_ proof: ProofItem) {
         ensureSpace(72)
-        draw(proof.displayName, font: .systemFont(ofSize: 12, weight: .semibold), color: .label, spacingAfter: 4)
+        let displayName = ClaimTextLimits.required(proof.displayName, limit: ProofItemTextLimits.displayName)
+        draw(displayName.isEmpty ? proof.type.displayName : displayName, font: .systemFont(ofSize: 12, weight: .semibold), color: .label, spacingAfter: 4)
         addKeyValue("Type", proof.type.displayName)
-        addKeyValue("Added", DateHelpers.fullDate(proof.createdAt))
+        addKeyValue("Added", proof.createdAt.timeIntervalSinceReferenceDate.isFinite ? DateHelpers.fullDateTime(proof.createdAt) : "Unknown")
 
-        if let intelligence = proof.intelligence {
+        if let intelligence = proof.intelligence?.normalizedForStorage() {
             addKeyValue("Proof completeness", intelligence.completeness.displayPercent)
             if let orderNumber = intelligence.orderNumber {
                 addKeyValue("Order", orderNumber)
@@ -145,7 +179,7 @@ private final class PDFPageWriter {
             draw(intelligence.summary, font: .systemFont(ofSize: 10), color: .secondaryLabel, spacingAfter: 6)
         }
 
-        if let text = proof.extractedText?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+        if let text = ClaimTextLimits.optional(proof.extractedText, limit: ProofItemTextLimits.extractedText) {
             draw("Extracted text: \(String(text.prefix(900)))", font: .systemFont(ofSize: 9), color: .secondaryLabel, spacingAfter: 8)
         }
 
@@ -182,14 +216,31 @@ private final class PDFPageWriter {
         color: UIColor,
         spacingAfter: CGFloat
     ) {
-        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanText = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.maximumDrawCharacters))
         guard !cleanText.isEmpty else { return }
 
+        let fragments = Self.fragments(for: cleanText, maximumCharacters: Self.maximumFragmentCharacters)
+        for (index, fragment) in fragments.enumerated() {
+            drawFragment(
+                fragment,
+                font: font,
+                color: color,
+                spacingAfter: index == fragments.count - 1 ? spacingAfter : 2
+            )
+        }
+    }
+
+    private func drawFragment(
+        _ text: String,
+        font: UIFont,
+        color: UIColor,
+        spacingAfter: CGFloat
+    ) {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: color
         ]
-        let rect = NSString(string: cleanText).boundingRect(
+        let rect = NSString(string: text).boundingRect(
             with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading],
             attributes: attributes,
@@ -197,11 +248,59 @@ private final class PDFPageWriter {
         )
 
         ensureSpace(ceil(rect.height) + spacingAfter)
-        NSString(string: cleanText).draw(
+        NSString(string: text).draw(
             in: CGRect(x: margin, y: y, width: contentWidth, height: ceil(rect.height)),
             withAttributes: attributes
         )
         y += ceil(rect.height) + spacingAfter
+    }
+
+    private static func fragments(for text: String, maximumCharacters: Int) -> [String] {
+        let normalized = text.replacingOccurrences(of: "\r\n", with: "\n")
+        var fragments: [String] = []
+        var current = ""
+
+        func flushCurrent() {
+            let trimmed = current.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                fragments.append(trimmed)
+            }
+            current = ""
+        }
+
+        for paragraph in normalized.components(separatedBy: .newlines) {
+            let paragraph = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !paragraph.isEmpty else {
+                flushCurrent()
+                continue
+            }
+
+            if current.count + paragraph.count + 1 > maximumCharacters {
+                flushCurrent()
+            }
+
+            if paragraph.count <= maximumCharacters {
+                current = current.isEmpty ? paragraph : "\(current)\n\(paragraph)"
+                continue
+            }
+
+            flushCurrent()
+            var remaining = paragraph[...]
+            while !remaining.isEmpty {
+                let end = remaining.index(
+                    remaining.startIndex,
+                    offsetBy: min(maximumCharacters, remaining.count)
+                )
+                let chunk = String(remaining[..<end]).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !chunk.isEmpty {
+                    fragments.append(chunk)
+                }
+                remaining = remaining[end...]
+            }
+        }
+
+        flushCurrent()
+        return fragments.isEmpty ? [text] : fragments
     }
 
     private func ensureSpace(_ height: CGFloat) {

@@ -1,8 +1,10 @@
 import Foundation
+import OSLog
 import WidgetKit
 
 final class ClaimSnapshotService {
     static let shared = ClaimSnapshotService()
+    private static let logger = Logger(subsystem: "com.hardik.dueproof", category: "WidgetSnapshot")
 
     private init() {}
 
@@ -13,9 +15,7 @@ final class ClaimSnapshotService {
             try SharedClaimSnapshotStore.shared.save(snapshot)
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            #if DEBUG
-            print("Unable to publish DueProof widget snapshot: \(error.localizedDescription)")
-            #endif
+            Self.logger.error("Unable to publish widget snapshot: \(error.localizedDescription, privacy: .private)")
         }
     }
 
@@ -48,7 +48,7 @@ final class ClaimSnapshotService {
             categoryIconName: claim.categoryIcon,
             statusDisplayName: claim.statusDisplayName,
             urgencyLabel: claim.urgencyLabel,
-            valueAtRisk: claim.valueAtRisk,
+            valueAtRisk: CurrencyFormatter.sanitizedAmount(claim.valueAtRisk),
             deadline: claim.deadline,
             hasProof: !claim.proofItemsList.isEmpty
         )

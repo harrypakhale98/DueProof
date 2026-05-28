@@ -45,6 +45,8 @@ Run tests:
 xcodebuild test -project DueProof.xcodeproj -scheme DueProof -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
+Terminal builds require the full Xcode toolchain selected with `xcode-select`. Device and archive signing should use a local Apple developer team setting in Xcode or a non-checked-in `DEVELOPMENT_TEAM=<TeamID>` override.
+
 ## Import and Export
 
 JSON export includes claim details, dates, status, values, notes, proof metadata, and locally stored proof file data when available.

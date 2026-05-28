@@ -18,7 +18,7 @@ final class ClaimDraftGenerator {
     }
 
     func generate(from ocrResult: OCRResult) async -> ClaimDraft {
-        let sourceText = ocrResult.searchableText
+        let sourceText = OCRResult.normalizedSearchableText(ocrResult.searchableText)
         var draft: ClaimDraft?
 
         if preferOnDeviceIntelligence {
@@ -30,11 +30,12 @@ final class ClaimDraftGenerator {
     }
 
     static func generateFallbackDraft(from text: String, ocrWarnings: [String] = []) -> ClaimDraft {
-        let lines = normalizedLines(from: text)
-        let category = suggestedCategory(from: text)
+        let sourceText = OCRResult.normalizedSearchableText(text)
+        let lines = normalizedLines(from: sourceText)
+        let category = suggestedCategory(from: sourceText)
         let merchant = likelyMerchant(from: lines)
-        let purchaseDate = parseFirstDate(text)
-        let explicitDeadline = explicitDeadline(from: text)
+        let purchaseDate = parseFirstDate(sourceText)
+        let explicitDeadline = explicitDeadline(from: sourceText)
         let value = preferredDollarAmount(from: lines)
         var warnings = ocrWarnings
         var suggestedDeadline = explicitDeadline
@@ -79,6 +80,7 @@ final class ClaimDraftGenerator {
     }
 
     static func parseFirstDate(_ text: String) -> Date? {
+        let text = OCRResult.normalizedSearchableText(text)
         guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) else {
             return nil
         }
@@ -182,7 +184,14 @@ final class ClaimDraftGenerator {
                   let valueRange = Range(match.range(at: 1), in: line)
             else { return nil }
 
-            return Double(line[valueRange].replacingOccurrences(of: ",", with: ""))
+            guard let value = Double(line[valueRange].replacingOccurrences(of: ",", with: "")),
+                  value.isFinite,
+                  value <= CurrencyFormatter.maximumSupportedAmount
+            else {
+                return nil
+            }
+
+            return value
         }
     }
 

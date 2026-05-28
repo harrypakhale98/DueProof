@@ -284,6 +284,12 @@ struct ClaimDraftReviewView: View {
                 .focused($focusedField, equals: .actionURL)
                 .accessibilityLabel("Action, support, or cancellation URL")
 
+            if let actionURLValidationMessage {
+                Label(actionURLValidationMessage, systemImage: "exclamationmark.circle")
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
+
             TextEditor(text: $policySummary)
                 .frame(minHeight: 80)
                 .accessibilityLabel("Policy, terms, or next-step summary")
@@ -346,7 +352,16 @@ struct ClaimDraftReviewView: View {
     private var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && (parsedValue ?? -1) >= 0
+            && actionURLValidationMessage == nil
             && reminderValidationMessage == nil
+    }
+
+    private var actionURLValidationMessage: String? {
+        let trimmed = actionURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return Claim.normalizedActionURLString(trimmed) == nil
+            ? "Enter a valid support link, email address link, or phone link."
+            : nil
     }
 
     private var reminderValidationMessage: String? {
@@ -369,10 +384,14 @@ struct ClaimDraftReviewView: View {
 
         isSaving = true
         defer { isSaving = false }
+        var createdLocalFileName: String?
+        var insertedClaim: Claim?
+        var createdProof: ProofItem?
 
         do {
-            let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            let normalizedMerchant = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
+            let normalizedTitle = ClaimTextLimits.required(title, limit: ClaimTextLimits.title)
+            let normalizedMerchant = ClaimTextLimits.required(merchant, limit: ClaimTextLimits.merchant)
+            let normalizedActionURL = Claim.normalizedActionURLString(actionURLString)
             let claim = Claim(
                 title: normalizedTitle,
                 category: category,
@@ -380,14 +399,15 @@ struct ClaimDraftReviewView: View {
                 valueAtRisk: parsedValue,
                 deadline: hasDeadline ? deadline : nil,
                 reminderDate: reminderEnabled ? reminderDate : nil,
-                referenceNumber: normalizedOptional(referenceNumber, limit: 120),
-                policySummary: normalizedRequired(policySummary, limit: 1_500),
-                actionURLString: normalizedOptional(actionURLString, limit: 500),
-                notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
+                referenceNumber: ClaimTextLimits.optional(referenceNumber, limit: ClaimTextLimits.reference),
+                policySummary: ClaimTextLimits.required(policySummary, limit: ClaimTextLimits.policySummary),
+                actionURLString: normalizedActionURL,
+                notes: ClaimTextLimits.required(notes, limit: ClaimTextLimits.notes),
                 status: .active
             )
 
             modelContext.insert(claim)
+            insertedClaim = claim
 
             if let proofData {
                 let fileName: String
@@ -397,6 +417,7 @@ struct ClaimDraftReviewView: View {
                 case .document, .note:
                     fileName = try FileStorageService.shared.saveDocumentData(proofData, originalFileName: proofDisplayName)
                 }
+                createdLocalFileName = fileName
                 let proof = ProofItem(
                     type: proofType,
                     localFileName: fileName,
@@ -405,11 +426,13 @@ struct ClaimDraftReviewView: View {
                     intelligence: proofIntelligence,
                     claim: claim
                 )
+                createdProof = proof
                 modelContext.insert(proof)
                 claim.proofItemsList.append(proof)
             }
 
             try modelContext.save()
+            createdLocalFileName = nil
 
             if reminderEnabled {
                 await NotificationService.shared.scheduleReminder(for: claim)
@@ -418,18 +441,18 @@ struct ClaimDraftReviewView: View {
             onCreated?()
             dismiss()
         } catch {
+            if let createdProof {
+                modelContext.delete(createdProof)
+            }
+            if let insertedClaim {
+                modelContext.delete(insertedClaim)
+            }
+            _ = FileStorageService.shared.deleteFile(named: createdLocalFileName)
+            try? modelContext.save()
             errorMessage = error.localizedDescription
         }
     }
 
-    private func normalizedOptional(_ value: String, limit: Int) -> String? {
-        let normalized = normalizedRequired(value, limit: limit)
-        return normalized.isEmpty ? nil : normalized
-    }
-
-    private func normalizedRequired(_ value: String, limit: Int) -> String {
-        String(value.trimmingCharacters(in: .whitespacesAndNewlines).prefix(limit))
-    }
 }
 
 #Preview {

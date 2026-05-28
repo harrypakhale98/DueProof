@@ -127,12 +127,12 @@ final class OnDeviceIntelligenceService {
                 title: normalized(title),
                 category: category,
                 merchant: normalized(merchant),
-                valueAtRisk: valueAtRisk,
+                valueAtRisk: Self.nonNegativeFinite(valueAtRisk),
                 purchaseDate: purchaseDateText.flatMap(ClaimDraftGenerator.parseFirstDate),
                 suggestedDeadline: suggestedDeadlineText.flatMap(ClaimDraftGenerator.parseFirstDate),
                 reminderDate: reminderDateText.flatMap(ClaimDraftGenerator.parseFirstDate),
                 notes: normalized(notes),
-                confidence: min(max(confidence ?? 0.65, 0), 1),
+                confidence: Self.normalizedConfidence(confidence),
                 warnings: warnings ?? [],
                 sourceSummary: normalized(sourceSummary)
             )
@@ -141,6 +141,22 @@ final class OnDeviceIntelligenceService {
         private func normalized(_ value: String?) -> String? {
             let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             return trimmed.isEmpty ? nil : trimmed
+        }
+
+        private static func nonNegativeFinite(_ value: Double?) -> Double? {
+            guard let value,
+                  value.isFinite,
+                  value >= 0,
+                  value <= CurrencyFormatter.maximumSupportedAmount
+            else {
+                return nil
+            }
+            return value
+        }
+
+        private static func normalizedConfidence(_ value: Double?) -> Double {
+            guard let value, value.isFinite else { return 0.65 }
+            return min(max(value, 0), 1)
         }
     }
 
@@ -162,7 +178,7 @@ final class OnDeviceIntelligenceService {
         func proofIntelligence(categoryHint: ClaimCategory?, sourceText: String) -> ProofIntelligence {
             let resolvedMerchant = normalized(merchant)
             let category = categoryRawValue.flatMap(ClaimCategory.init(rawValue:)) ?? categoryHint
-            let value = valueAtRisk.flatMap { $0 >= 0 ? $0 : nil }
+            let value = Self.nonNegativeFinite(valueAtRisk)
             let purchaseDate = purchaseDateText.flatMap(ClaimDraftGenerator.parseFirstDate)
             let deadline = deadlineText.flatMap(ClaimDraftGenerator.parseFirstDate)
             let hasReadableText = !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -189,7 +205,7 @@ final class OnDeviceIntelligenceService {
                 orderNumber: normalized(orderNumber),
                 serialNumber: normalized(serialNumber),
                 barcodeValues: Array(Set(normalizedBarcodeValues)).sorted(),
-                confidence: min(max(confidence ?? 0.65, 0), 1),
+                confidence: Self.normalizedConfidence(confidence),
                 warnings: warnings ?? [],
                 summary: normalized(summary) ?? Self.summary(
                     merchant: resolvedMerchant,
@@ -207,6 +223,22 @@ final class OnDeviceIntelligenceService {
         private func normalized(_ value: String?) -> String? {
             let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             return trimmed.isEmpty ? nil : String(trimmed.prefix(160))
+        }
+
+        private static func nonNegativeFinite(_ value: Double?) -> Double? {
+            guard let value,
+                  value.isFinite,
+                  value >= 0,
+                  value <= CurrencyFormatter.maximumSupportedAmount
+            else {
+                return nil
+            }
+            return value
+        }
+
+        private static func normalizedConfidence(_ value: Double?) -> Double {
+            guard let value, value.isFinite else { return 0.65 }
+            return min(max(value, 0), 1)
         }
 
         private static func summary(

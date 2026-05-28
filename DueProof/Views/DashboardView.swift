@@ -63,7 +63,7 @@ struct DashboardView: View {
                     .padding(.vertical, 16)
                 }
             }
-            .contentMargins(.bottom, 120, for: .scrollContent)
+            .contentMargins(.bottom, bottomScrollClearance, for: .scrollContent)
             .navigationTitle("DueProof")
             .background(.background)
             .toolbar {
@@ -95,6 +95,10 @@ struct DashboardView: View {
     private var metricColumns: [GridItem] {
         let count = dynamicTypeSize.isAccessibilitySize ? 1 : 3
         return Array(repeating: GridItem(.flexible(), spacing: 10), count: count)
+    }
+
+    private var bottomScrollClearance: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? 220 : 168
     }
 
     private var expiringSoonClaims: [Claim] {
@@ -279,7 +283,7 @@ struct DashboardView: View {
             }
 
             if expiringSoonClaims.isEmpty {
-                Text("No active deadlines need attention in the next 30 days.")
+                Text("No overdue or upcoming active deadlines need attention.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)

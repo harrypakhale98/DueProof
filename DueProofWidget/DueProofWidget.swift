@@ -22,7 +22,11 @@ struct DueProofWidgetProvider: TimelineProvider {
     }
 
     private func loadSnapshot() -> SharedClaimSnapshot {
-        SharedClaimSnapshotStore.shared.load() ?? .empty
+        guard !DueProofPrivacySettings.isAppLockEnabled else {
+            return .empty
+        }
+
+        return SharedClaimSnapshotStore.shared.load() ?? .empty
     }
 }
 
@@ -199,7 +203,8 @@ private struct DueProofWidgetView: View {
     }
 
     private func currency(_ value: Double) -> String {
-        value.formatted(.currency(code: Locale.current.currency?.identifier ?? "USD"))
+        SharedClaimSnapshot.nonNegativeFinite(value)
+            .formatted(.currency(code: Locale.current.currency?.identifier ?? "USD"))
     }
 }
 

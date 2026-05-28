@@ -192,7 +192,7 @@ struct ClaimCardView: View {
 
     private var compactMetadataLine: some View {
         HStack(spacing: 6) {
-            Text(claim.merchant?.isEmpty == false ? claim.merchant! : claim.categoryDisplayName)
+            Text(claim.merchant.flatMap { $0.isEmpty ? nil : $0 } ?? claim.categoryDisplayName)
 
             Text("|")
                 .accessibilityHidden(true)
