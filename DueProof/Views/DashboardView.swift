@@ -1,12 +1,15 @@
 import SwiftData
 import SwiftUI
+import TipKit
 
 struct DashboardView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Query(sort: \Claim.createdAt, order: .reverse) private var claims: [Claim]
     @State private var editorCategory: ClaimCategory?
     @State private var isSmartFilling = false
+    @State private var isChoosingFirstClaimType = false
     @State private var savedPulse = false
+    private let firstRunTip = DueProofFirstClaimTip()
 
     var body: some View {
         NavigationStack {
@@ -88,7 +91,21 @@ struct DashboardView: View {
                     }
                 )
             }
+            .confirmationDialog("Choose a claim type", isPresented: $isChoosingFirstClaimType, titleVisibility: .visible) {
+                ForEach(firstRunManualCategories) { category in
+                    Button(category.displayName) {
+                        editorCategory = category
+                    }
+                }
+
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Start with the type that matches the proof or deadline you want to protect.")
+            }
             .sensoryFeedback(.success, trigger: savedPulse)
+            .task(id: claims.isEmpty) {
+                DueProofFirstClaimTip.hasSavedClaim = !claims.isEmpty
+            }
         }
     }
 
@@ -121,6 +138,20 @@ struct DashboardView: View {
         DashboardMetrics(claims: claims)
     }
 
+    private var firstRunManualCategories: [ClaimCategory] {
+        ClaimCategory.allCases
+    }
+
+    private var firstRunTipView: some View {
+        TipView(firstRunTip, arrowEdge: .bottom) { action in
+            handleFirstRunTipAction(action)
+        }
+        .tipBackground(.regularMaterial)
+        .tipCornerRadius(AppTheme.compactCornerRadius)
+        .tipImageStyle(AppTheme.brandTint, AppTheme.receiptAqua)
+        .tipImageSize(CGSize(width: 30, height: 30))
+    }
+
     private var smartFillButton: some View {
         Button {
             isSmartFilling = true
@@ -147,6 +178,8 @@ struct DashboardView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(minHeight: 260)
+
+            firstRunTipView
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Start with")
@@ -359,6 +392,54 @@ struct DashboardView: View {
         if claim.proofItemsList.isEmpty { return AppTheme.brandTint }
         if claim.deadline == nil { return .purple }
         return .green
+    }
+
+    private func handleFirstRunTipAction(_ action: Tips.Action) {
+        firstRunTip.invalidate(reason: .actionPerformed)
+
+        switch action.id {
+        case DueProofFirstClaimTip.smartFillActionID:
+            isSmartFilling = true
+        case DueProofFirstClaimTip.chooseTypeActionID:
+            isChoosingFirstClaimType = true
+        default:
+            break
+        }
+    }
+}
+
+private struct DueProofFirstClaimTip: Tip {
+    static let smartFillActionID = "dueproof.firstClaim.smartFill"
+    static let chooseTypeActionID = "dueproof.firstClaim.chooseType"
+
+    @Parameter(.transient)
+    static var hasSavedClaim: Bool = false
+
+    var title: Text {
+        Text("Start with one claim")
+    }
+
+    var message: Text? {
+        Text("Choose a receipt or screenshot for Smart Fill, or pick a claim type to enter the deadline, value, and proof yourself.")
+    }
+
+    var image: Image? {
+        Image(systemName: "checkmark.shield.fill")
+    }
+
+    var actions: [Action] {
+        Action(id: Self.smartFillActionID, title: "Smart Fill")
+        Action(id: Self.chooseTypeActionID, title: "Choose Type")
+    }
+
+    var rules: [Rule] {
+        #Rule(Self.$hasSavedClaim) { hasSavedClaim in
+            hasSavedClaim == false
+        }
+    }
+
+    var options: [any TipOption] {
+        Tips.MaxDisplayCount(1)
     }
 }
 

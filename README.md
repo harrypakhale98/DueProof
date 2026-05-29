@@ -47,6 +47,14 @@ xcodebuild test -project DueProof.xcodeproj -scheme DueProof -destination 'platf
 
 Terminal builds require the full Xcode toolchain selected with `xcode-select`. Device and archive signing should use a local Apple developer team setting in Xcode or a non-checked-in `DEVELOPMENT_TEAM=<TeamID>` override.
 
+Run the release preflight:
+
+```sh
+Scripts/app_store_preflight.sh --all
+```
+
+The preflight checks repo-owned release requirements, then runs build, tests, and archive when full Xcode is selected. It also reports owner-only App Store Connect and physical-device gates separately.
+
 ## Import and Export
 
 JSON export includes claim details, dates, status, values, notes, proof metadata, and locally stored proof file data when available.
@@ -66,6 +74,6 @@ Export includes claim details and proof data. Import skips missing local proof-f
 
 Use [MANUAL_QA.md](MANUAL_QA.md) before TestFlight or App Store submission.
 
-Also review [PRIVACY.md](PRIVACY.md) and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md).
+Also review [PRIVACY.md](PRIVACY.md), [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md), and [APP_STORE_SUBMISSION.md](APP_STORE_SUBMISSION.md).
 
 For award-readiness and editorial preparation, review [DESIGN_THESIS.md](DESIGN_THESIS.md), [ACCESSIBILITY_AUDIT.md](ACCESSIBILITY_AUDIT.md), [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md), [APP_STORE_AWARD_PACKAGE.md](APP_STORE_AWARD_PACKAGE.md), [AWARD_QA_SCORECARD.md](AWARD_QA_SCORECARD.md), and [USER_TESTING_SCRIPT.md](USER_TESTING_SCRIPT.md).

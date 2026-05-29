@@ -39,7 +39,7 @@ struct SettingsView: View {
                     clearAllData()
                 }
             } message: {
-                Text("This deletes claims, proof references, local proof files, and pending reminders on this device.")
+                Text("This deletes claims, proof references, local proof files, pending reminders, shared-import queue items, temporary exports, Spotlight entries, and widget snapshots on this device.")
             }
             .alert("DueProof", isPresented: Binding(get: { alertMessage != nil }, set: { if !$0 { clearAlertMessages() } })) {
                 Button("OK", role: .cancel) {}
@@ -349,6 +349,8 @@ private struct PrivacyView: View {
         ("No ads", "rectangle.slash"),
         ("No analytics", "chart.bar.xaxis"),
         ("No tracking", "location.slash"),
+        ("No telemetry or crash-reporting SDK", "waveform.slash"),
+        ("No remote push notification service", "bell.slash"),
         ("Optional Face ID or passcode app lock", "lock.shield"),
         ("System search is opt-in", "magnifyingglass"),
         ("Smart Fill uses on-device text recognition", "text.viewfinder"),
@@ -381,6 +383,10 @@ private struct LegalView: View {
 
             Section("Privacy") {
                 Text("No DueProof account. No DueProof-operated backend. No ads. No analytics. No tracking. Your proof photos stay on this device unless you enable private iCloud sync or choose to export or share them through system controls.")
+            }
+
+            Section("Limits") {
+                Text("DueProof helps organize proof and reminders. It does not file claims for you, guarantee reimbursement, or replace merchant, employer, insurer, government, or legal deadlines.")
             }
         }
         .navigationTitle("Legal")

@@ -25,14 +25,14 @@ enum DueProofPrivacySettings {
         guard let defaults = appGroupDefaults else {
             return true
         }
-        defaults.bool(forKey: appLockEnabledKey)
+        return defaults.bool(forKey: appLockEnabledKey)
     }
 
     static var isSpotlightSearchEnabled: Bool {
         guard let defaults = appGroupDefaults else {
             return false
         }
-        defaults.bool(forKey: spotlightSearchEnabledKey)
+        return defaults.bool(forKey: spotlightSearchEnabledKey)
     }
 }
 
@@ -40,7 +40,7 @@ enum DueProofBoundedFileReader {
     private static let chunkSize = 1_048_576
 
     static func data(at url: URL, maximumBytes: Int, tooLargeError: Error) throws -> Data {
-        guard maximumBytes >= 0 else {
+        guard maximumBytes >= 0, maximumBytes < Int.max else {
             throw tooLargeError
         }
 

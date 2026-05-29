@@ -28,4 +28,4 @@ A plain, centered pastel receipt logo on neutral light and dark backgrounds. The
 
 ## Finishing Notes
 
-The asset catalog contains build-safe 1024px opaque PNG masters at `DueProof/Resources/Assets.xcassets/AppIcon.appiconset/DueProofIcon.png` and `DueProof/Resources/Assets.xcassets/AppIcon.appiconset/DueProofIconDark.png`. Before App Store submission, review the icon in Icon Composer or the final Xcode asset workflow for clear and tinted variants if supported by the submission toolchain.
+The asset catalog contains build-safe 1024px opaque PNG masters at `DueProof/Resources/Assets.xcassets/AppIcon.appiconset/DueProofIcon.png`, `DueProof/Resources/Assets.xcassets/AppIcon.appiconset/DueProofIconDark.png`, and `DueProof/Resources/Assets.xcassets/AppIcon.appiconset/DueProofIconTinted.png`. Before App Store submission, review the icon in Icon Composer or the final Xcode asset workflow for any additional clear or layered variants if supported by the submission toolchain.

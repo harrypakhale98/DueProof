@@ -169,6 +169,24 @@ final class ClaimLogicTests: XCTestCase {
         )
     }
 
+    func testBoundedFileReaderRejectsUnboundedLimitWithoutOverflowing() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("txt")
+        try Data("proof".utf8).write(to: url, options: [.atomic])
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        XCTAssertThrowsError(
+            try DueProofBoundedFileReader.data(
+                at: url,
+                maximumBytes: Int.max,
+                tooLargeError: DueProofSharedStorageError.sharedItemTooLarge
+            )
+        ) { error in
+            XCTAssertEqual(error as? DueProofSharedStorageError, .sharedItemTooLarge)
+        }
+    }
+
     func testSharedFileNameNormalizationBoundsAndSanitizesProviderMetadata() {
         let longSuggestedName = "/private/tmp/\(String(repeating: "R", count: 200)).pdf"
         let fileName = DueProofSharedFileName.originalFileName(

@@ -83,6 +83,8 @@ Create private claim cards with value at risk, deadline, proof photos, notes, re
 
 No DueProof account. No ads. No analytics. No tracking. No DueProof-operated backend. DueProof stores claim details and proof photos locally by default, with optional private iCloud sync and optional app lock controlled by you.
 
+DueProof helps you organize proof and reminders. It does not file claims for you, guarantee reimbursement, or replace merchant, employer, insurer, government, or legal deadlines.
+
 ## Promotional Text
 
 Keep proof. Beat deadlines. Track returns, warranties, gift cards, reimbursements, and renewals privately on your iPhone.

@@ -2,6 +2,7 @@ import CoreSpotlight
 import LocalAuthentication
 import SwiftData
 import SwiftUI
+import TipKit
 
 @main
 struct DueProofApp: App {
@@ -14,6 +15,7 @@ struct DueProofApp: App {
     init() {
         AppLockSettings.migrateLegacyStandardDefaultIfNeeded()
         FileStorageService.shared.cleanupTemporaryExports()
+        Self.configureTips()
 
         do {
             modelContainer = try Self.makeModelContainer()
@@ -101,6 +103,18 @@ struct DueProofApp: App {
             cloudKitDatabase: .none
         )
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+    private static func configureTips() {
+        do {
+            try Tips.configure([
+                .displayFrequency(.immediate)
+            ])
+        } catch {
+            #if DEBUG
+            print("Error initializing TipKit \(error.localizedDescription)")
+            #endif
+        }
     }
 }
 

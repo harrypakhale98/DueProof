@@ -31,7 +31,6 @@
 		100000000000000000000016 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* AppTheme.swift */; };
 		100000000000000000000017 /* PreviewSampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000017 /* PreviewSampleData.swift */; };
 		100000000000000000000018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000018 /* Assets.xcassets */; };
-		100000000000000000000032 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* PrivacyInfo.xcprivacy */; };
 		100000000000000000000019 /* DashboardMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001A /* DashboardMetrics.swift */; };
 		10000000000000000000001A /* ClaimCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001B /* ClaimCardView.swift */; };
 		10000000000000000000001B /* ClaimDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001C /* ClaimDraft.swift */; };
@@ -57,6 +56,7 @@
 		10000000000000000000002F /* SharedImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000032 /* SharedImportService.swift */; };
 		100000000000000000000030 /* SyncConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000033 /* SyncConfiguration.swift */; };
 		100000000000000000000031 /* AppLockSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000034 /* AppLockSettings.swift */; };
+		100000000000000000000032 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* PrivacyInfo.xcprivacy */; };
 		110000000000000000000001 /* ClaimLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000001 /* ClaimLogicTests.swift */; };
 		110000000000000000000002 /* DashboardMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000002 /* DashboardMetricsTests.swift */; };
 		110000000000000000000003 /* ExportImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210000000000000000000003 /* ExportImportTests.swift */; };
@@ -163,12 +163,12 @@
 		20000000000000000000002D /* DueProofShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShortcuts.swift; sourceTree = "<group>"; };
 		20000000000000000000002E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		20000000000000000000002F /* DueProof.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DueProof.entitlements; sourceTree = "<group>"; };
-		200000000000000000000035 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		200000000000000000000030 /* DueProofShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueProofShared.swift; sourceTree = "<group>"; };
 		200000000000000000000031 /* ClaimSnapshotService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimSnapshotService.swift; sourceTree = "<group>"; };
 		200000000000000000000032 /* SharedImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedImportService.swift; sourceTree = "<group>"; };
 		200000000000000000000033 /* SyncConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncConfiguration.swift; sourceTree = "<group>"; };
 		200000000000000000000034 /* AppLockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockSettings.swift; sourceTree = "<group>"; };
+		200000000000000000000035 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		210000000000000000000001 /* ClaimLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimLogicTests.swift; sourceTree = "<group>"; };
 		210000000000000000000002 /* DashboardMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetricsTests.swift; sourceTree = "<group>"; };
 		210000000000000000000003 /* ExportImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportImportTests.swift; sourceTree = "<group>"; };
@@ -773,7 +773,7 @@
 				CODE_SIGN_ENTITLEMENTS = DueProof/Resources/DueProof.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProof/Resources/Info.plist;
@@ -808,7 +808,7 @@
 				CODE_SIGN_ENTITLEMENTS = DueProof/Resources/DueProof.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProof/Resources/Info.plist;
@@ -842,7 +842,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -868,7 +868,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -894,7 +894,7 @@
 				CODE_SIGN_ENTITLEMENTS = DueProofWidget/DueProofWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProofWidget/Info.plist;
@@ -925,7 +925,7 @@
 				CODE_SIGN_ENTITLEMENTS = DueProofWidget/DueProofWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProofWidget/Info.plist;
@@ -956,7 +956,7 @@
 				CODE_SIGN_ENTITLEMENTS = DueProofShareExtension/DueProofShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProofShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -986,7 +986,7 @@
 				CODE_SIGN_ENTITLEMENTS = DueProofShareExtension/DueProofShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DUHVN68KBA;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DueProofShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
