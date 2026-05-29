@@ -1,0 +1,17 @@
+{
+  "name": "DueProof",
+  "short_name": "DueProof",
+  "description": "Private receipt and claim deadline tracker for iPhone.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6fbfb",
+  "theme_color": "#f6fbfb",
+  "icons": [
+    {
+      "src": "assets/dueproof-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
