@@ -3,12 +3,31 @@ import Foundation
 import OSLog
 import UniformTypeIdentifiers
 
+private final class SpotlightIndexGeneration: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "com.hardik.dueproof.spotlight.generation")
+    private var value = 0
+
+    func next() -> Int {
+        queue.sync {
+            value += 1
+            return value
+        }
+    }
+
+    func isCurrent(_ candidate: Int) -> Bool {
+        queue.sync {
+            value == candidate
+        }
+    }
+}
+
 final class SpotlightIndexService {
     static let shared = SpotlightIndexService()
     static let claimIdentifierPrefix = "claim:"
 
     private static let logger = Logger(subsystem: "com.hardik.dueproof", category: "Spotlight")
     private let domainIdentifier = "com.hardik.dueproof.claims"
+    private let generation = SpotlightIndexGeneration()
 
     private init() {}
 
@@ -21,12 +40,29 @@ final class SpotlightIndexService {
             return
         }
 
+        let generationToken = generation.next()
+        let generation = generation
+        let domainIdentifier = domainIdentifier
         let items = claims.map(searchableItem)
 
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domainIdentifier]) { _ in
-            guard !items.isEmpty else { return }
+            guard generation.isCurrent(generationToken),
+                  DueProofPrivacySettings.isSpotlightSearchEnabled,
+                  !DueProofPrivacySettings.isAppLockEnabled,
+                  !items.isEmpty
+            else {
+                return
+            }
 
             CSSearchableIndex.default().indexSearchableItems(items) { error in
+                guard generation.isCurrent(generationToken) else {
+                    if !DueProofPrivacySettings.isSpotlightSearchEnabled || DueProofPrivacySettings.isAppLockEnabled {
+                        _ = generation.next()
+                        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domainIdentifier])
+                    }
+                    return
+                }
+
                 if let error {
                     Self.logger.error("Spotlight indexing failed: \(error.localizedDescription, privacy: .private)")
                 }
@@ -35,6 +71,7 @@ final class SpotlightIndexService {
     }
 
     func deleteAll() {
+        _ = generation.next()
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domainIdentifier])
     }
 

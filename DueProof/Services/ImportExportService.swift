@@ -422,12 +422,12 @@ final class ImportExportService {
         var insertedCount = 0
         var insertedClaimIDs: [UUID] = []
         var insertedClaims: [Claim] = []
-        var importedProofIDs = Set<UUID>()
         var localFileNamesCreatedByImport: [String] = []
 
         do {
             for record in bundle.claims {
                 guard record.isImportable, !existingIDs.contains(record.id) else { continue }
+                var importedProofIDsForClaim = Set<UUID>()
 
                 let importedStatus = ClaimStatus.normalizedStoredStatus(record.status)
                 let completionFields = Self.normalizedCompletionFields(
@@ -461,8 +461,8 @@ final class ImportExportService {
                 )
 
                 for proofRecord in record.proofItems where shouldImportProofItem(proofRecord) {
-                    guard !importedProofIDs.contains(proofRecord.id) else { continue }
-                    importedProofIDs.insert(proofRecord.id)
+                    guard !importedProofIDsForClaim.contains(proofRecord.id) else { continue }
+                    importedProofIDsForClaim.insert(proofRecord.id)
 
                     let localFileName = try importedLocalFileName(for: proofRecord)
                     if proofRecord.binaryProofData != nil, let localFileName {
@@ -503,7 +503,8 @@ final class ImportExportService {
 
     private func shouldImportProofItem(_ proofRecord: ProofItemRecord) -> Bool {
         if proofRecord.binaryProofData != nil { return true }
-        guard let localFileName = proofRecord.localFileName else { return true }
+        if proofRecord.type == .note { return true }
+        guard let localFileName = proofRecord.localFileName else { return false }
         return FileStorageService.shared.isValidLocalFileName(localFileName)
             && FileStorageService.shared.fileExists(named: localFileName)
     }

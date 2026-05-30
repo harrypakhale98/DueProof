@@ -340,6 +340,106 @@ final class ExportImportTests: XCTestCase {
         XCTAssertTrue(imported.proofItemsList.isEmpty)
     }
 
+    func testImportSkipsFileProofsWithoutRecoverablePayloads() throws {
+        let json = """
+        {
+          "claims": [
+            {
+              "id": "4924EDCB-1B01-44CC-9477-D00CD7D3804D",
+              "title": "Imported claim",
+              "category": "document",
+              "valueAtRisk": 48,
+              "status": "active",
+              "proofItems": [
+                {
+                  "id": "6A0DB98F-53DE-4505-A13A-A5B1C2756F9D",
+                  "type": "photo",
+                  "displayName": "Missing photo",
+                  "createdAt": "2026-05-21T12:00:00Z"
+                },
+                {
+                  "id": "D9207719-F227-4C2C-8FAD-EAE1E673A122",
+                  "type": "document",
+                  "localFileName": "../receipt.pdf",
+                  "displayName": "Unsafe document",
+                  "createdAt": "2026-05-21T12:00:00Z"
+                },
+                {
+                  "id": "5D1FD83D-C069-40DF-BA5E-DDB8B66574D5",
+                  "type": "note",
+                  "displayName": "Useful note",
+                  "extractedText": "Shared support text",
+                  "createdAt": "2026-05-21T12:00:00Z"
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let url = try writeTemporaryJSON(json)
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        XCTAssertEqual(try ImportExportService.shared.importClaims(from: url, into: context), 1)
+        let imported = try XCTUnwrap(context.fetch(FetchDescriptor<Claim>()).first)
+        XCTAssertEqual(imported.proofItemsList.map(\.type), [.note])
+        XCTAssertEqual(imported.proofItemsList.first?.extractedText, "Shared support text")
+    }
+
+    func testImportKeepsDuplicateProofIDsScopedToEachClaim() throws {
+        let duplicateProofID = "6A0DB98F-53DE-4505-A13A-A5B1C2756F9D"
+        let json = """
+        {
+          "claims": [
+            {
+              "id": "4924EDCB-1B01-44CC-9477-D00CD7D3804D",
+              "title": "First claim",
+              "category": "returnItem",
+              "valueAtRisk": 48,
+              "status": "active",
+              "proofItems": [
+                {
+                  "id": "\(duplicateProofID)",
+                  "type": "note",
+                  "displayName": "First note",
+                  "extractedText": "First claim proof",
+                  "createdAt": "2026-05-21T12:00:00Z"
+                }
+              ]
+            },
+            {
+              "id": "5D1FD83D-C069-40DF-BA5E-DDB8B66574D5",
+              "title": "Second claim",
+              "category": "warranty",
+              "valueAtRisk": 120,
+              "status": "active",
+              "proofItems": [
+                {
+                  "id": "\(duplicateProofID)",
+                  "type": "note",
+                  "displayName": "Second note",
+                  "extractedText": "Second claim proof",
+                  "createdAt": "2026-05-21T12:00:00Z"
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let url = try writeTemporaryJSON(json)
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        XCTAssertEqual(try ImportExportService.shared.importClaims(from: url, into: context), 2)
+        let imported = try context.fetch(FetchDescriptor<Claim>())
+        let first = try XCTUnwrap(imported.first { $0.title == "First claim" })
+        let second = try XCTUnwrap(imported.first { $0.title == "Second claim" })
+        XCTAssertEqual(first.proofItemsList.first?.extractedText, "First claim proof")
+        XCTAssertEqual(second.proofItemsList.first?.extractedText, "Second claim proof")
+    }
+
     func testCompleteExportCarriesProofImageDataAcrossContainers() throws {
         let image = UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).image { context in
             UIColor.systemGreen.setFill()

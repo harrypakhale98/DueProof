@@ -237,9 +237,8 @@ private struct AppLockGate<Content: View>: View {
 
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            authenticationMessage = nil
-            isAppLockEnabled = false
-            isUnlocked = true
+            authenticationMessage = "Set up Face ID, Touch ID, or a device passcode to unlock DueProof."
+            isUnlocked = false
             return
         }
 
@@ -297,7 +296,7 @@ private struct RootTabView: View {
         }
         .onChange(of: route.request) { _, request in
             guard case let .sharedImport(id) = request?.destination else { return }
-            Task { await importSharedRequest(id: id) }
+            Task { await importSharedRequest(id: id, routeRequest: request) }
         }
         .alert("DueProof", isPresented: Binding(get: { sharedImportAlertMessage != nil }, set: { if !$0 { clearSharedImportMessages() } })) {
             Button("OK", role: .cancel) {}
@@ -388,6 +387,7 @@ private struct RootTabView: View {
         }
     }
 
+    @MainActor
     private func importPendingSharedRequests() async {
         do {
             let count = try await SharedImportService.shared.importPendingRequests(into: modelContext)
@@ -399,7 +399,14 @@ private struct RootTabView: View {
         }
     }
 
-    private func importSharedRequest(id: UUID?) async {
+    @MainActor
+    private func importSharedRequest(id: UUID?, routeRequest: AppRouteRequest?) async {
+        defer {
+            if let routeRequest {
+                route.consume(routeRequest)
+            }
+        }
+
         do {
             let count: Int
             if let id {
@@ -411,6 +418,8 @@ private struct RootTabView: View {
             if count > 0 {
                 sharedImportMessage = count == 1 ? "Imported 1 shared item." : "Imported \(count) shared items."
             }
+        } catch SharedImportError.requestNotFound {
+            // The cold-launch pending import task may have already imported and deleted this request.
         } catch {
             sharedImportError = error.localizedDescription
         }

@@ -228,12 +228,15 @@ struct ClaimsListView: View {
         case .claim(let claimID):
             clearSearchAndFilter()
             path = [claimID]
+            route.consume(request)
         case .addClaim(let category):
             editorCategory = category
+            route.consume(request)
         case .search(let query):
             filter = .all
             searchText = query
             path = []
+            route.consume(request)
         case .sharedImport:
             path = []
         }

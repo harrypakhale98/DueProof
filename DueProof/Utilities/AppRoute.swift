@@ -19,6 +19,7 @@ struct AppRouteRequest: Identifiable, Equatable {
     let destination: AppRouteDestination
 }
 
+@MainActor
 final class AppRoute: ObservableObject {
     @Published var selectedTab: AppTab = .dashboard
     @Published var request: AppRouteRequest?
@@ -43,6 +44,11 @@ final class AppRoute: ObservableObject {
     func importSharedRequest(id: UUID?) {
         selectedTab = .claims
         request = AppRouteRequest(destination: .sharedImport(id))
+    }
+
+    func consume(_ handledRequest: AppRouteRequest) {
+        guard request?.id == handledRequest.id else { return }
+        request = nil
     }
 
     func handle(_ url: URL) {

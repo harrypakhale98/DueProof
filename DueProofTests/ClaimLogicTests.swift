@@ -560,6 +560,7 @@ final class ClaimLogicTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testExternalRoutesBoundSearchAndRejectMalformedSharedImportIDs() throws {
         let route = AppRoute()
         let longQuery = String(repeating: "urgent%20", count: 80)
@@ -574,6 +575,7 @@ final class ClaimLogicTests: XCTestCase {
         XCTAssertEqual(route.selectedTab, .claims)
 
         let previousRequest = route.request
+        let staleRequest = try XCTUnwrap(previousRequest)
         route.handle(try XCTUnwrap(URL(string: "dueproof://import-shared/not-a-uuid")))
         XCTAssertEqual(route.request, previousRequest)
         route.handle(try XCTUnwrap(URL(string: "dueproof://claim/\(claimID.uuidString)/extra")))
@@ -587,6 +589,11 @@ final class ClaimLogicTests: XCTestCase {
 
         route.handle(try XCTUnwrap(URL(string: "dueproof://claim/\(claimID.uuidString)")))
         XCTAssertEqual(route.request?.destination, .claim(claimID))
+        let handledRequest = try XCTUnwrap(route.request)
+        route.consume(handledRequest)
+        XCTAssertNil(route.request)
+        route.consume(staleRequest)
+        XCTAssertNil(route.request)
 
         XCTAssertEqual(
             ClaimSearchIntent.normalizedQuery(String(repeating: "x", count: 300)).count,
@@ -595,6 +602,7 @@ final class ClaimLogicTests: XCTestCase {
         XCTAssertEqual(ClaimSearchIntent.normalizedQuery("  urgent\nrebate\tproof  "), "urgent rebate proof")
     }
 
+    @MainActor
     func testSpotlightRouteRequiresExactIdentifierPayload() {
         let route = AppRoute()
         let id = UUID(uuidString: "8EED90D8-87E6-4F1F-B978-7CE78F8D9071")!
