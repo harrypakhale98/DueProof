@@ -37,6 +37,7 @@ struct ClaimDetailView: View {
         .contentMargins(.bottom, claim.status.isOpen ? 104 : 24, for: .scrollContent)
         .navigationTitle(claim.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack {

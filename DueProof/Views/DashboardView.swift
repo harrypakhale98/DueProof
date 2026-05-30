@@ -143,7 +143,7 @@ struct DashboardView: View {
     }
 
     private var firstRunTipView: some View {
-        TipView(firstRunTip, arrowEdge: .bottom) { action in
+        TipView(firstRunTip, arrowEdge: .top) { action in
             handleFirstRunTipAction(action)
         }
         .tipBackground(.regularMaterial)
@@ -167,19 +167,17 @@ struct DashboardView: View {
     }
 
     private var emptyDashboard: some View {
-        VStack(alignment: .leading, spacing: 28) {
+        VStack(alignment: .leading, spacing: 20) {
             EmptyStateView(
                 systemImage: "doc.text.magnifyingglass",
                 title: "Nothing at risk yet",
-                message: "Add a return, gift card, warranty, rebate, reimbursement, renewal, or document before it slips away. Stored on this iPhone.",
+                message: "Track a return, gift card, warranty, rebate, renewal, or document before it slips away. Stored on this iPhone.",
                 buttonTitle: "Add First Claim"
             ) {
                 editorCategory = .returnItem
             }
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 260)
-
-            firstRunTipView
+            .frame(minHeight: emptyStateMinimumHeight)
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Start with")
@@ -191,9 +189,15 @@ struct DashboardView: View {
                     editorCategory = category
                 }
             }
+
+            firstRunTipView
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+    }
+
+    private var emptyStateMinimumHeight: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? 260 : 214
     }
 
     private var moneyAtRiskCard: some View {
